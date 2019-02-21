@@ -44,7 +44,7 @@ limitsY = [-30, 30];
 % Global attractors
 waterSourceLocations = [-20, 20];
 
-% Global repellors
+% Make some obstacles
 groupDiameter = numberOfAgents*avoidDistance;
 
 wallObstacleA.Y = []; %10:avoidDistance/5:15;
@@ -136,7 +136,7 @@ agentsSpeedOut = statesList(2*numberOfAgents + 1: 3*numberOfAgents,:)';
 agentsOrientationOut = statesList(3*numberOfAgents + 1 :end,:)';
 
 %% Plot and output some data
-figure
+figure(1)
 plot(agentsXOut, agentsYOut);
 hold on
 plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 

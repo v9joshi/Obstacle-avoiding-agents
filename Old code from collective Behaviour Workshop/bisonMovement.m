@@ -3,8 +3,7 @@
 % 1. Avoid closeby bisons, say within a radius r1
 % 2. Orient with nearby bisons, say within a radius r2
 % 3. Move towards far away bisons, say within radius r3
-% 4. Ghost Bison, imaginary leader bison that determines your "ideal
-%    direction", only attracts bison, bison can never catch up to it.
+
 clear all; close all; clc;
 
 % How many Bison are there?
