@@ -1,97 +1,57 @@
 % Agent decision step
-function actionInput = agentDecision(stateList, params)
+function actionInput = agentDecision(currAgent, params, decisionInput, actionInput)
 
-numberOfBison = params.numberOfBison;
-turnRate = params.turnRate;
+% unpack required params
 avoidDistance = params.avoidDistance;
 attractDistance = params.attractDistance;
 alignDistance = params.alignDistance;
-waterSourceLocations = params.waterSourceLocations;
-obstacleLocations = params.obstacleLocations;
-bisonGains = params.bisonGains;
-timeStep = params.timeStep;
+agentGains = params.agentGains;
 
+% % unpack the states of the agent
+% agentX = stateList(1:numberOfAgents);
+% agentY = stateList(numberOfAgents + 1: 2*numberOfAgents);
+% agentSpeed = stateList(2*numberOfAgents + 1: 3*numberOfAgents);
+% agentOrientation = stateList(3*numberOfAgents + 1:end);
 
-% unpack the states of the bison
-bisonX = stateList(1:numberOfBison);
-bisonY = stateList(numberOfBison + 1: 2*numberOfBison);
-bisonSpeed = stateList(2*numberOfBison + 1: 3*numberOfBison);
-bisonOrientation = stateList(3*numberOfBison + 1:end);
+% unpack the decision input variable
+agentDistanceList = decisionInput.agentDistanceList;
+relativeAgentOrientation = decisionInput.relativeAgentOrientation;
+absoluteAgentOrientation = decisionInput.absoluteAgentOrientation;
+distanceFromObsLocations = decisionInput.distanceFromObsLocations;
+relativeObsUnitVector = decisionInput.relativeObsUnitVector;
+relativeWSUnitVector = decisionInput.relativeWSUnitVector;
 
-% Bison positions in 2D
-bisonPositions = [bisonX, bisonY];
+% Get repelled by close by Agents
+changeInOrientationRepel = relativeAgentOrientation;
+changeInOrientationRepel(agentDistanceList > avoidDistance, :) = [];
 
-% Calculate the desired orientation for each bison
-desiredOrientation = bisonOrientation; % ideally each bison would continue on it's current path
+% Get attracted to Agents that are close but not very close
+changeInOrientationAttract = relativeAgentOrientation;
+changeInOrientationAttract(avoidDistance > agentDistanceList | agentDistanceList > attractDistance, :) = [];
 
-for currBison = 1:numberOfBison
-    changeInOrientation = 0;
-    
-    % Where is the Bison we're looking at/
-    currBisonPosition = bisonPositions(currBison, :);
-    
-    % where are the rest of the Bison?
-    otherBisonPositions = bisonPositions;
-    otherBisonPositions(currBison, :) = [];
-    
-    otherBisonOrientations = bisonOrientation;
-    otherBisonOrientations(currBison) =  [];
-    
-    % What is the distance between our Bison and the rest?
-    relativePositions = otherBisonPositions - repmat(currBisonPosition, numberOfBison - 1, 1);
-    distanceList = sqrt(sum(relativePositions.^2, 2)); 
-    relativeOrientation = [relativePositions(:,1)./distanceList, relativePositions(:,2)./distanceList]; %atan2(relativePositions(:,2), relativePositions(:,1));
-    
-    absoluteOrientation = [cos(otherBisonOrientations), sin(otherBisonOrientations)];
-        
-    % Get repelled by close by Bison
-    changeInOrientationRepel = relativeOrientation;
-    changeInOrientationRepel(distanceList > avoidDistance, :) = [];
-    changeInOrientationRepelAngles = atan2(changeInOrientationRepel(:,2), changeInOrientationRepel(:,1));
-    
-    % Get attracted to Bison that are close but not very close
-    changeInOrientationAttract = relativeOrientation;
-    changeInOrientationAttract(avoidDistance > distanceList | distanceList > attractDistance, :) = [];
-    changeInOrientationAttractAngles = atan2(changeInOrientationAttract(:,2), changeInOrientationAttract(:,1));
-    
-    % Get aligned with Bison that are close but not very close
-    changeInOrientationAlign = absoluteOrientation;
-    changeInOrientationAlign(avoidDistance > distanceList | distanceList > alignDistance, :) = [];
-    changeInOrientationAlignAngles = atan2(changeInOrientationAlign(:,2), changeInOrientationAlign(:,1));
-    
-    % Try to move towards water sources
-    relativeWSLocations = waterSourceLocations - repmat(currBisonPosition, size(waterSourceLocations, 1), 1);
-    distanceFromWSLocations = sqrt(sum(relativeWSLocations.^2, 2));
-    relativeWSUnitVector = [relativeWSLocations(:,1)./distanceFromWSLocations, relativeWSLocations(:,2)./distanceFromWSLocations];
-    changeInOrientationWSAngles = atan2(relativeWSLocations(:,2), relativeWSLocations(:,1));
-    
-    % Get repelled by obstacles    
-    relativeObsLocations = obstacleLocations - repmat(currBisonPosition, size(obstacleLocations, 1), 1);
-    distanceFromObsLocations = sqrt(sum(relativeObsLocations.^2, 2));
-    relativeObsUnitVector = [relativeObsLocations(:,1)./distanceFromObsLocations, relativeObsLocations(:,2)./distanceFromObsLocations];
-    changeInOrientationWSAngles = atan2(relativeWSLocations(:,2), relativeWSLocations(:,1));
-    
-    relativeObsUnitVector( avoidDistance < distanceFromObsLocations, :) = [];
-    changeInOrientationRepel = [changeInOrientationRepel; relativeObsUnitVector];
-    
-    % Add the unit vectors together and then determine the orientation
-    if isempty(changeInOrientationRepel) 
-        summedUnitVectors = sum(changeInOrientationAttract, 1) + sum(changeInOrientationAlign, 1) + bisonGains(currBison)*sum(relativeWSUnitVector, 1);
-    elseif isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the water source
-        summedUnitVectors = -sum(changeInOrientationRepel, 1) + bisonGains(currBison)*sum(relativeWSUnitVector, 1);
-    else % if you're near an obstacle forget all about the water
-        summedUnitVectors = -sum(changeInOrientationRepel, 1);% + bisonGains(currBison)*sum(relativeWSUnitVector, 1);
-    end
-        
-    if sqrt(sum(summedUnitVectors.^2)) == 0
-        normalizedSum = [0, 0];
-    else
-        normalizedSum = summedUnitVectors/sqrt(sum(summedUnitVectors.^2));
-    end
-%     desiredOrientation(currBison) = desiredOrientation(currBison) + atan2(summedUnitVectors(2), summedUnitVectors(1));
-  
-    desiredOrientation(currBison) = atan2(normalizedSum(2), normalizedSum(1));
+% Get aligned with Agents that are close but not very close
+changeInOrientationAlign = absoluteAgentOrientation;
+changeInOrientationAlign(avoidDistance > agentDistanceList | agentDistanceList > alignDistance, :) = [];
+
+% Get repelled by obstacles    
+relativeObsUnitVector(avoidDistance < distanceFromObsLocations, :) = [];
+changeInOrientationRepel = [changeInOrientationRepel; relativeObsUnitVector];
+
+% Add the unit vectors together and then determine the orientation
+if isempty(changeInOrientationRepel) 
+    summedUnitVectors = sum(changeInOrientationAttract, 1) + sum(changeInOrientationAlign, 1) + agentGains(currAgent)*sum(relativeWSUnitVector, 1);
+elseif isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the water source
+    summedUnitVectors = -sum(changeInOrientationRepel, 1) + agentGains(currAgent)*sum(relativeWSUnitVector, 1);
+else % if you're near an obstacle forget all about the water
+    summedUnitVectors = -sum(changeInOrientationRepel, 1);% + agentGains(currAgent)*sum(relativeWSUnitVector, 1);
 end
 
+if sqrt(sum(summedUnitVectors.^2)) == 0
+    normalizedSum = [0, 0];
+else
+    normalizedSum = summedUnitVectors/sqrt(sum(summedUnitVectors.^2));
+end
+
+actionInput.desiredOrientation(currAgent) = atan2(normalizedSum(2), normalizedSum(1));
 
 end

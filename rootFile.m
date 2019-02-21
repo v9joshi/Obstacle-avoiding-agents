@@ -10,14 +10,15 @@ clc; close all; clear all;
 
 %% Define some parameters
 % Agent parameters
-numberOfAgentss = 10; % How many Agents exist?
-agentLength = 2; % The length (head to tail) of each Agents in m.
-repelRadius = 2; % Agentss within this distance of each other will repel each other.
-alignRadius = 5; % Agentss within this distance of each other will align with each other.
-attractRadius = 10; % Agentss within this distance of each other will attract each other.
+numberOfAgents = 10; % How many Agents exist?
+agentLength = 1; % The length (head to tail) of each Agents in m.
+avoidDistance = 2; % Agents within this distance of each other will repel each other.
+alignDistance = 5; % Agents within this distance of each other will align with each other.
+attractDistance = 10; % Agents within this distance of each other will attract each other.
+turnRate = 2; % units of radians per second
 
 % simulation parameters
-totalSimulationTime = 500; % How long does the simulation run?
+totalSimulationTime = 200; % How long does the simulation run?
 stepTime = 0.01; % Step time for each loop of the simulation
 
 % What are the initial states of the agents?
@@ -71,7 +72,7 @@ params.alignDistance = alignDistance;
 params.attractDistance = attractDistance;
 
 params.turnRate = turnRate;
-params.timeStep = timeStep;
+params.stepTime = stepTime;
 
 params.agentGains = agentGains;
 params.waterSourceLocations = waterSourceLocations;
@@ -80,75 +81,119 @@ params.obstacleLocations = obstacleLocations;
 % Variable initialization
 destinationReached = 0;
 startTime = 0;
-statesList = [];
-timeList = [startTime];
+statesList = initialStates;
+timeList = startTime;
 destination = waterSourceLocations(1,:);
 destinationList = waterSourceLocations;
 numberOfBouts = 0;
 
-
 %% Run the simulation
-
-while timeList(end) < totalSimulationtime
+while timeList(end) < totalSimulationTime
     timeList(end+1) =  timeList(end) + stepTime;
     
-    % Run perception, decision and action steps for each bison
-    for currBison = 1:numberOfBison
-        % run the perception step
-        decisionInput = agentPerception(currBison, stateList, params);    
+    % What is the current state?
+    statesNow = statesList(:,end);
     
-        % run the decision step
-        actionInput = agentDecision(currBison, stateList, params, decisionInput);    
+    % What can we change for the agents?
+    actionInput.desiredSpeed = statesNow(2*numberOfAgents + 1: 3*numberOfAgents);
+    actionInput.desiredOrientation = statesNow(3*numberOfAgents + 1: end);
+    
+    % Run perception and decision  steps for each agent
+    for currAgent = 1:numberOfAgents
+        % run the perception step and update decision input
+        decisionInput = agentPerception(currAgent, statesNow, params);    
+    
+        % run the decision step and update action input
+        actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
     end
+  
+    % run the action step for all the agents and update the state list
+    statesNow = agentAction(statesNow, params, actionInput);  
     
-    % run the action step for all Bison
-    stateList = agentAction(stateList, params, actionInput);  
+    % add on the states
+    statesList = [statesList, statesNow];
     
     % check if destination has been reached
-    meanAgentsX = mean(statesOutCurrBout(:,1:numberOfAgents), 2);
-    meanAgentsY = mean(statesOutCurrBout(:,numberOfAgents + 1: 2*numberOfAgents), 2);
+    meanAgentX = mean(statesNow(1:numberOfAgents));
+    meanAgentY = mean(statesNow(numberOfAgents + 1: 2*numberOfAgents));
     
-    distanceToGoal = sqrt((meanAgentsX -  destination(1)).^2 + (meanAgentsY - destination(2)).^2);
+    distanceToGoal = sqrt((meanAgentX -  destination(1)).^2 + (meanAgentY - destination(2)).^2);
+    
     if min(distanceToGoal) < 5
         destinationReached = 1;
         goalReachIndex = find(distanceToGoal < 5, 1, 'first');
         goalReachTime = timeList(goalReachIndex);
         
         display(['Reached destination at time t = ', num2str(goalReachTime)]);
-    else
-        if mod(numberOfBouts, 2) == 0
-            destinationX = waterSourceLocations(1,1);
-            destinationY = waterSourceLocations(1,2);
-        else            
-            destinationX = limitsX(1) + range(limitsX)*rand(1,1);
-            destinationY = limitsY(1) + range(limitsY)*rand(1,1);
-        end
-        params.waterSourceLocations = [destinationX, destinationY];
-        destinationList = [destinationList; destinationX, destinationY];
+        break
     end    
 end
 
-% Unpack output states
-AgentsXOut = statesOut(:,1:numberOfAgents);
-AgentsYOut = statesOut(:,numberOfAgents + 1: 2*numberOfAgents);
-AgentsSpeedOut = statesOut(:,2*numberOfAgents + 1: 3*numberOfAgents);
-AgentsOrientationOut = statesOut(:,3*numberOfAgents + 1 :end);
+%% Unpack output states
+agentsXOut = statesList(1:numberOfAgents,:)';
+agentsYOut = statesList(numberOfAgents + 1: 2*numberOfAgents,:)';
+agentsSpeedOut = statesList(2*numberOfAgents + 1: 3*numberOfAgents,:)';
+agentsOrientationOut = statesList(3*numberOfAgents + 1 :end,:)';
 
 %% Plot and output some data
-%% Plot the motion
 figure
-plot(bisonXOut, bisonYOut);
+plot(agentsXOut, agentsYOut);
 hold on
 plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 
 plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
 plot(waterSourceLocations(:,1), waterSourceLocations(:,2), 'bo','MarkerFaceColor','b') 
 hold off
 
-xlabel('Bison x position')
-ylabel('Bison y position')
-title('Bison ranch')
+xlabel('Agent x position')
+ylabel('Agent y position')
+title('Agent world')
 
 axis equal
 
 axisLimits.X = get(gca, 'xlim');
 axisLimits.Y = get(gca, 'ylim');
+
+%% Animate the motion
+figure(2)
+
+% How large do we want each bison to be
+semiAgentSize = agentLength/2;
+
+for currTimeIndex = 1:10:length(timeList)
+     plot([agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:));...
+          agentsXOut(currTimeIndex,:) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:))],...
+          [agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:));...
+          agentsYOut(currTimeIndex,:) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:))] ,'-');
+      
+     hold on
+     plot(agentsXOut(currTimeIndex,:) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:)),...
+          agentsYOut(currTimeIndex,:) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:)) ,'v');
+      
+      
+     plot(agentsXOut(currTimeIndex, listOfInformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents)),...
+          agentsYOut(currTimeIndex, listOfInformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents)) ,'v', 'markerfacecolor','r');
+
+      
+     plot(agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:)),...
+          agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:)) ,'*');
+      
+    plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 
+    plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
+    plot(waterSourceLocations(:,1), waterSourceLocations(:,2), 'bo','MarkerFaceColor','b') 
+    
+      
+     hold off
+
+      
+%     hold on
+%     plot(bisonXOut, bisonYOut, '-');
+%     hold off
+    xlabel('Bison x position')
+    ylabel('Bison y position')
+
+    title('Bison ranch')
+    axis equal    
+    xlim(axisLimits.X)
+    ylim(axisLimits.Y)
+    pause(0.1);
+end
