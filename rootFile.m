@@ -1,33 +1,38 @@
+% This branch tries to re-create the simulations from
+% "The influence of group size and social interactions on collision risk
+% with obstacles"
+% Simon Croft, Richard Budgey, Jonathan W. Pitchford and A. Jamie Wood
 % This program simulates multiple agents interacting with each other and
 % the environment. The Agentss have inidivual behaviour designed to 
 % a) Move towards a goal.
 % b) Avoid obstacles in the way.
-% c) Interact with other Agentss so as to move in a group but also not
+% c) Interact with other Agents so as to move in a group but also not
 % collide with each other.
+
 
 % Clear and close everything
 clc; close all; clear all;
 
 %% Define some parameters
 % Agent parameters
-numberOfAgents = 10; % How many Agents exist?
-agentLength = 1; % The length (head to tail) of each Agents in m.
-avoidDistance = 2; % Agents within this distance of each other will repel each other.
-alignDistance = 5; % Agents within this distance of each other will align with each other.
-attractDistance = 10; % Agents within this distance of each other will attract each other.
-turnRate = 2; % units of radians per second
+numberOfAgents = 50; % How many Agents exist?
+agentLength = 0.75; % The length (head to tail) of each Agents in m.
+avoidDistance = 1.5; % Agents within this distance of each other will repel each other.
+alignDistance = 15; % Agents within this distance of each other will align with each other.
+attractDistance = 37.5; % Agents within this distance of each other will attract each other.
+turnRate = pi/4; % units of radians per second
 
 % simulation parameters
-totalSimulationTime = 200; % How long does the simulation run?
-stepTime = 0.01; % Step time for each loop of the simulation
+totalSimulationTime = 400; % How long does the simulation run?
+stepTime = 0.1; % Step time for each loop of the simulation
 
 % What are the initial states of the agents?
-initialPositionX = zeros(numberOfAgents, 1);%0.2*(1:1:numberOfAgents)';
-initialPositionY = 0.5*(1:1:numberOfAgents)';%zeros(numberOfAgents, 1);
+initialPositionX = avoidDistance*2*(1:1:numberOfAgents)' - avoidDistance*numberOfAgents;%zeros(numberOfAgents, 1);%0.2*(1:1:numberOfAgents)';
+initialPositionY = 1000*ones(numberOfAgents,1);% + 0.5*(1:1:numberOfAgents)';%zeros(numberOfAgents, 1);
 
-initialSpeed = 1*ones(numberOfAgents, 1);
+initialSpeed = 5*ones(numberOfAgents, 1);
 
-initialOrientation = zeros(numberOfAgents, 1);
+initialOrientation = 1.5*pi*ones(numberOfAgents, 1);
 
 % How many agents know the destination?
 fractionInformed = 0.3;
@@ -38,8 +43,8 @@ agentGains(listOfInformedAgents) = 1;
 
 %% Define some environment variables
 % What is the area where the agents can roam?
-limitsX = [-30, 30];
-limitsY = [-30, 30];
+limitsX = [-3000, 3000];
+limitsY = [-3000, 3000];
 
 % Global attractors
 waterSourceLocations = [-20, 20];
@@ -121,9 +126,7 @@ while timeList(end) < totalSimulationTime
     
     if min(distanceToGoal) < 5
         destinationReached = 1;
-        goalReachIndex = find(distanceToGoal < 5, 1, 'first');
-        goalReachTime = timeList(goalReachIndex);
-        
+        goalReachTime = timeList(end);
         display(['Reached destination at time t = ', num2str(goalReachTime)]);
         break
     end    
