@@ -2,7 +2,7 @@
 % the environment. The Agentss have inidivual behaviour designed to 
 % a) Move towards a goal.
 % b) Avoid obstacles in the way.
-% c) Interact with other Agentss so as to move in a group but also not
+% c) Interact with other Agents so as to move in a group but also not
 % collide with each other.
 
 % Clear and close everything
@@ -121,8 +121,7 @@ while timeList(end) < totalSimulationTime
     
     if min(distanceToGoal) < 5
         destinationReached = 1;
-        goalReachIndex = find(distanceToGoal < 5, 1, 'first');
-        goalReachTime = timeList(goalReachIndex);
+        goalReachTime = timeList(end);
         
         display(['Reached destination at time t = ', num2str(goalReachTime)]);
         break
