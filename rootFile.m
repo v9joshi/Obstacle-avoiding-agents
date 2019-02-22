@@ -9,7 +9,6 @@
 % c) Interact with other Agents so as to move in a group but also not
 % collide with each other.
 
-
 % Clear and close everything
 clc; close all; clear all;
 
@@ -47,21 +46,11 @@ limitsX = [-3000, 3000];
 limitsY = [-3000, 3000];
 
 % Global attractors
-waterSourceLocations = [-20, 20];
+waterSourceLocations = [0, -500];
 
 % Make some obstacles
 groupDiameter = numberOfAgents*avoidDistance;
-
-wallObstacleA.Y = []; %10:avoidDistance/5:15;
-wallObstacleA.X = []; %-15*ones(length(wallObstacleA.Y),1);
-
-
-wallObstacleB.X = -15:avoidDistance/5:(-15 + 2*groupDiameter);
-wallObstacleB.Y = 15*ones(length(wallObstacleB.X),1);
-
-obstacleLocations = [wallObstacleA.X(:), wallObstacleA.Y(:);
-                     wallObstacleB.X(:), wallObstacleB.Y(:)];
-
+obstaclePose = generateObstacles(avoidDistance, groupDiameter);
 
 %% Set simulation parameters and initialize variables
 % How long do we keep trying for a particular destination?
@@ -81,7 +70,7 @@ params.stepTime = stepTime;
 
 params.agentGains = agentGains;
 params.waterSourceLocations = waterSourceLocations;
-params.obstacleLocations = obstacleLocations;
+params.obstaclePose = obstaclePose;
 
 % Variable initialization
 destinationReached = 0;
@@ -142,7 +131,7 @@ agentsOrientationOut = statesList(3*numberOfAgents + 1 :end,:)';
 figure(1)
 plot(agentsXOut, agentsYOut);
 hold on
-plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 
+plot(obstaclePose(:,1), obstaclePose(:,2), 'rx','MarkerFaceColor','r') 
 plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
 plot(waterSourceLocations(:,1), waterSourceLocations(:,2), 'bo','MarkerFaceColor','b') 
 hold off
@@ -180,7 +169,7 @@ for currTimeIndex = 1:10:length(timeList)
      plot(agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:)),...
           agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:)) ,'*');
       
-    plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 
+    plot(obstaclePose(:,1), obstaclePose(:,2), 'rx','MarkerFaceColor','r') 
     plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
     plot(waterSourceLocations(:,1), waterSourceLocations(:,2), 'bo','MarkerFaceColor','b') 
     

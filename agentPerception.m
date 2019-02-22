@@ -4,7 +4,7 @@ function decisionInput = agentPerception(currAgent, stateList, params)
 % unpack some parameters
 numberOfAgents = params.numberOfAgents;
 waterSourceLocations = params.waterSourceLocations;
-obstacleLocations = params.obstacleLocations;
+obstaclePose = params.obstaclePose;
 
 % unpack the states of the agents
 agentX = stateList(1:numberOfAgents);
@@ -46,9 +46,15 @@ decisionInput.distanceFromWSLocations = distanceFromWSLocations;
 decisionInput.relativeWSUnitVector = [relativeWSLocations(:,1)./distanceFromWSLocations, relativeWSLocations(:,2)./distanceFromWSLocations];
 
 % Where are the Obstacles located relative to the current Agent?
+obstacleLocations = obstaclePose(:,1:2);
+obstacleOrientation = obstaclePose(:,3);
+
 relativeObsLocations = obstacleLocations - repmat(currAgentPosition, size(obstacleLocations, 1), 1);
 distanceFromObsLocations = sqrt(sum(relativeObsLocations.^2, 2));
 decisionInput.distanceFromObsLocations = distanceFromObsLocations;
+
+% Use other obstacle orientations to determine their direction unit vectors
+decisionInput.absoluteObsOrientation = [cos(obstacleOrientation), sin(obstacleOrientation)];
 
 % Use distance and locations to determine unit vectors to the obstacles
 decisionInput.relativeObsUnitVector = [relativeObsLocations(:,1)./distanceFromObsLocations, relativeObsLocations(:,2)./distanceFromObsLocations];
