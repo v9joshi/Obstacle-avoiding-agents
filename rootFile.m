@@ -12,29 +12,42 @@ clc; close all; clear all;
 % Agent parameters
 numberOfAgents = 10; % How many Agents exist?
 agentLength = 1; % The length (head to tail) of each Agents in m.
-avoidDistance = 2; % Agents within this distance of each other will repel each other.
-alignDistance = 5; % Agents within this distance of each other will align with each other.
+avoidDistance = 1; % Agents within this distance of each other will repel each other.
+alignDistance = 6; % Agents within this distance of each other will align with each other.
 attractDistance = 10; % Agents within this distance of each other will attract each other.
 turnRate = 2; % units of radians per second
 
 % simulation parameters
 totalSimulationTime = 200; % How long does the simulation run?
-stepTime = 0.01; % Step time for each loop of the simulation
+stepTime = 0.1; % Step time for each loop of the simulation
 
 % What are the initial states of the agents?
 initialPositionX = zeros(numberOfAgents, 1);%0.2*(1:1:numberOfAgents)';
 initialPositionY = 0.5*(1:1:numberOfAgents)';%zeros(numberOfAgents, 1);
-
 initialSpeed = 1*ones(numberOfAgents, 1);
-
 initialOrientation = zeros(numberOfAgents, 1);
+
+%% Set up some weights for the agents
+agentWeights.Destination = zeros(numberOfAgents, 1);
+agentWeights.Avoidance = zeros(numberOfAgents, 1);
+agentWeights.Attraction = zeros(numberOfAgents, 1);
+agentWeights.Alignment = zeros(numberOfAgents, 1);
+agentWeights.Obstacle = zeros(numberOfAgents, 1);
 
 % How many agents know the destination?
 fractionInformed = 0.3;
 informedAgents = round(fractionInformed*numberOfAgents);
-agentGains = zeros(numberOfAgents, 1);
 listOfInformedAgents = randsample(numberOfAgents, informedAgents);
-agentGains(listOfInformedAgents) = 1;
+agentWeights.Destination(listOfInformedAgents) = 1;
+
+% How much do agents care about social behavior (alignment, attraction,
+% avoidance)
+agentWeights.Avoidance(:) = 1;
+agentWeights.Attraction(:) = 1;
+agentWeights.Alignment(:) = 1;
+
+% How much do agents care about obstacle avoidance?
+agentWeights.Obstacle(:) = 2;
 
 %% Define some environment variables
 % What is the area where the agents can roam?
@@ -74,7 +87,7 @@ params.attractDistance = attractDistance;
 params.turnRate = turnRate;
 params.stepTime = stepTime;
 
-params.agentGains = agentGains;
+params.agentWeights = agentWeights;
 params.waterSourceLocations = waterSourceLocations;
 params.obstacleLocations = obstacleLocations;
 
@@ -181,18 +194,14 @@ for currTimeIndex = 1:10:length(timeList)
     plot(waterSourceLocations(:,1), waterSourceLocations(:,2), 'bo','MarkerFaceColor','b') 
     
       
-     hold off
+    hold off
 
-      
-%     hold on
-%     plot(bisonXOut, bisonYOut, '-');
-%     hold off
-    xlabel('Bison x position')
-    ylabel('Bison y position')
+    xlabel('Agents x position')
+    ylabel('Agents y position')
 
-    title('Bison ranch')
+    title('Agent home')
     axis equal    
     xlim(axisLimits.X)
     ylim(axisLimits.Y)
-    pause(0.1);
+    pause(0.01);
 end

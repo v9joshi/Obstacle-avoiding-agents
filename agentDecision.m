@@ -5,7 +5,7 @@ function actionInput = agentDecision(currAgent, params, decisionInput, actionInp
 avoidDistance = params.avoidDistance;
 attractDistance = params.attractDistance;
 alignDistance = params.alignDistance;
-agentGains = params.agentGains;
+agentWeights = params.agentWeights;
 
 % % unpack the states of the agent
 % agentX = stateList(1:numberOfAgents);
@@ -35,15 +35,21 @@ changeInOrientationAlign(avoidDistance > agentDistanceList | agentDistanceList >
 
 % Get repelled by obstacles    
 relativeObsUnitVector(avoidDistance < distanceFromObsLocations, :) = [];
-changeInOrientationRepel = [changeInOrientationRepel; relativeObsUnitVector];
+
+% changeInOrientationRepel = [changeInOrientationRepel; relativeObsUnitVector];
 
 % Add the unit vectors together and then determine the orientation
-if isempty(changeInOrientationRepel) 
-    summedUnitVectors = sum(changeInOrientationAttract, 1) + sum(changeInOrientationAlign, 1) + agentGains(currAgent)*sum(relativeWSUnitVector, 1);
+if isempty(changeInOrientationRepel) && isempty(relativeObsUnitVector)
+    summedUnitVectors = agentWeights.Attraction(currAgent)*sum(changeInOrientationAttract, 1)...
+                        + agentWeights.Alignment(currAgent)*sum(changeInOrientationAlign, 1)...
+                        + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1);
 elseif isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the water source
-    summedUnitVectors = -sum(changeInOrientationRepel, 1) + agentGains(currAgent)*sum(relativeWSUnitVector, 1);
+    summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationRepel, 1)...
+                        + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1);
 else % if you're near an obstacle forget all about the water
-    summedUnitVectors = -sum(changeInOrientationRepel, 1);% + agentGains(currAgent)*sum(relativeWSUnitVector, 1);
+    summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationRepel, 1)...
+                        - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
+                        % + agentGains(currAgent)*sum(relativeWSUnitVector, 1);
 end
 
 if sqrt(sum(summedUnitVectors.^2)) == 0
