@@ -13,6 +13,7 @@ clc; close all; clear all;
 numberOfAgents = 10; % How many Agents exist?
 
 agentLength = 1; % The length (head to tail) of each Agents in m. Used only for plotting.
+arrowheadSize = 10; % Size of arrowheads on plotted agents, in pixels.
 
 % Radii for the agents
 avoidDistance = 1; % Agents within this distance of each other will repel each other.
@@ -184,30 +185,33 @@ figure(2)
 % How large do we want each agent to be
 semiAgentSize = agentLength/2;
 
-for currTimeIndex = 1:10:length(timeList)
-     plot([agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:));...
-          agentsXOut(currTimeIndex,:) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:))],...
-          [agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:));...
-          agentsYOut(currTimeIndex,:) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:))] ,'-');
-      
-     hold on
-     plot(agentsXOut(currTimeIndex,:) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:)),...
-          agentsYOut(currTimeIndex,:) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:)) ,'v');
-      
-      
-     plot(agentsXOut(currTimeIndex, listOfInformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents)),...
-          agentsYOut(currTimeIndex, listOfInformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents)) ,'v', 'markerfacecolor','r');
+warning('off','arrow:warnlimits')
 
-      
-     plot(agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:)),...
-          agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:)) ,'*');
-      
+for currTimeIndex = 1:10:length(timeList)
+%     plot([agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:));...
+%          agentsXOut(currTimeIndex,:) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:))],...
+%          [agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:));...
+%          agentsYOut(currTimeIndex,:) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:))] ,'-');
+%      
+%     hold on
+%     plot(agentsXOut(currTimeIndex,:) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:)),...
+%          agentsYOut(currTimeIndex,:) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:)) ,'v');
+%      
+%      
+%     plot(agentsXOut(currTimeIndex, listOfInformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents)),...
+%          agentsYOut(currTimeIndex, listOfInformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents)) ,'v', 'markerfacecolor','r');
+%
+%      
+%     plot(agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:)),...
+%          agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:)) ,'*');
+%      
     plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 
+      hold on
     plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
     plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
-    
-      
-    hold off
+%    
+%      
+%    hold off
 
     xlabel('Agents x position')
     ylabel('Agents y position')
@@ -216,5 +220,12 @@ for currTimeIndex = 1:10:length(timeList)
     axis equal    
     xlim(axisLimits.X)
     ylim(axisLimits.Y)
+      axis(axis)
+      arrow([agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:));...
+	     agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:))],...
+	    [agentsXOut(currTimeIndex,:) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:));...
+	     agentsYOut(currTimeIndex,:) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:))],...
+	   arrowheadSize);
+      hold off
     pause(0.01);
 end
