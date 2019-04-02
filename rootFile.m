@@ -1,8 +1,8 @@
 % This program simulates multiple agents interacting with each other and
-% the environment. The Agentss have inidivual behaviour designed to 
+% the environment. The agents have inidivual behaviour designed to 
 % a) Move towards a goal.
 % b) Avoid obstacles in the way.
-% c) Interact with other Agents so as to move in a group but also not
+% c) Interact with other agents so as to move in a group but also not
 % collide with each other.
 
 % Clear and close everything
@@ -11,21 +11,26 @@ clc; close all; clear all;
 %% Define some parameters
 % Agent parameters
 numberOfAgents = 10; % How many Agents exist?
-agentLength = 1; % The length (head to tail) of each Agents in m.
-avoidDistance = 1; % Agents within this distance of each other will repel each other.
-alignDistance = 6; % Agents within this distance of each other will align with each other.
-attractDistance = 10; % Agents within this distance of each other will attract each other.
-turnRate = 2; % units of radians per second
 
-% simulation parameters
+agentLength = 1; % The length (head to tail) of each Agents in m. Used only for plotting.
+
+% Radii for the agents
+avoidDistance = 1; % Agents within this distance of each other will repel each other.
+alignDistance = 10; % Agents within this distance of each other will align with each other.
+attractDistance = 10; % Agents within this distance of each other will attract each other.
+
+% Agent dynamics
+turnRate = 2; % units of radians per second. speed limit
+
+% Simulation parameters
 totalSimulationTime = 200; % How long does the simulation run?
 stepTime = 0.1; % Step time for each loop of the simulation
 
 % What are the initial states of the agents?
-initialPositionX = zeros(numberOfAgents, 1);%0.2*(1:1:numberOfAgents)';
-initialPositionY = 0.5*(1:1:numberOfAgents)';%zeros(numberOfAgents, 1);
-initialSpeed = 1*ones(numberOfAgents, 1);
-initialOrientation = zeros(numberOfAgents, 1);
+initialPositionX = zeros(numberOfAgents, 1); %0.2*(1:1:numberOfAgents)';
+initialPositionY = 0.5*(1:1:numberOfAgents)'; %zeros(numberOfAgents, 1);
+initialSpeed = 1*ones(numberOfAgents, 1); % m/s
+initialOrientation = zeros(numberOfAgents, 1); % radians
 
 %% Set up some weights for the agents
 agentWeights.Destination = zeros(numberOfAgents, 1);
@@ -35,7 +40,7 @@ agentWeights.Alignment = zeros(numberOfAgents, 1);
 agentWeights.Obstacle = zeros(numberOfAgents, 1);
 
 % How many agents know the destination?
-fractionInformed = 0.3;
+fractionInformed = 0.7;
 informedAgents = round(fractionInformed*numberOfAgents);
 listOfInformedAgents = randsample(numberOfAgents, informedAgents);
 agentWeights.Destination(listOfInformedAgents) = 1;
@@ -47,7 +52,7 @@ agentWeights.Attraction(:) = 1;
 agentWeights.Alignment(:) = 1;
 
 % How much do agents care about obstacle avoidance?
-agentWeights.Obstacle(:) = 2;
+agentWeights.Obstacle(:) = 1;
 
 %% Define some environment variables
 % What is the area where the agents can roam?
@@ -55,26 +60,31 @@ limitsX = [-30, 30];
 limitsY = [-30, 30];
 
 % Global attractors
-waterSourceLocations = [-20, 20];
+goalLocations = [-20, 20];
+
+% Obstacle parameters
+groupDiameter = numberOfAgents*avoidDistance;
+obstacleSpacing = avoidDistance/5; % Distance between two points on the obstacle
 
 % Make some obstacles
-groupDiameter = numberOfAgents*avoidDistance;
+wallObstacleA.Y = []; %  10:avoidDistance/5:15;
+wallObstacleA.X = []; % -15*ones(length(wallObstacleA.Y),1);
 
-wallObstacleA.Y = []; %10:avoidDistance/5:15;
-wallObstacleA.X = []; %-15*ones(length(wallObstacleA.Y),1);
-
-
-wallObstacleB.X = -15:avoidDistance/5:(-15 + 2*groupDiameter);
+wallObstacleB.X = -15:obstacleSpacing:(-15 + 2*groupDiameter);
 wallObstacleB.Y = 15*ones(length(wallObstacleB.X),1);
 
 obstacleLocations = [wallObstacleA.X(:), wallObstacleA.Y(:);
                      wallObstacleB.X(:), wallObstacleB.Y(:)];
+                 
+% Plot the obstacle
+figure(11)
+plot(wallObstacleB.X, wallObstacleB.Y, 'rx')
+xlim(limitsX);
+xlim(limitsY);
 
+axis 'equal'
 
 %% Set simulation parameters and initialize variables
-% How long do we keep trying for a particular destination?
-maxTime = 150;
-
 % Collect all the initial states together
 initialStates = [initialPositionX; initialPositionY; initialSpeed; initialOrientation];
 
@@ -88,16 +98,19 @@ params.turnRate = turnRate;
 params.stepTime = stepTime;
 
 params.agentWeights = agentWeights;
-params.waterSourceLocations = waterSourceLocations;
+params.waterSourceLocations = goalLocations;
 params.obstacleLocations = obstacleLocations;
 
 % Variable initialization
-destinationReached = 0;
+destinationReached = 0; % Flag for reaching the destination
+
 startTime = 0;
 statesList = initialStates;
 timeList = startTime;
-destination = waterSourceLocations(1,:);
-destinationList = waterSourceLocations;
+
+destination = goalLocations(1,:);
+destinationList = goalLocations;
+
 numberOfBouts = 0;
 
 %% Run the simulation
@@ -153,7 +166,7 @@ plot(agentsXOut, agentsYOut);
 hold on
 plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 
 plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
-plot(waterSourceLocations(:,1), waterSourceLocations(:,2), 'bo','MarkerFaceColor','b') 
+plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
 hold off
 
 xlabel('Agent x position')
@@ -168,7 +181,7 @@ axisLimits.Y = get(gca, 'ylim');
 %% Animate the motion
 figure(2)
 
-% How large do we want each bison to be
+% How large do we want each agent to be
 semiAgentSize = agentLength/2;
 
 for currTimeIndex = 1:10:length(timeList)
@@ -191,7 +204,7 @@ for currTimeIndex = 1:10:length(timeList)
       
     plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 
     plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
-    plot(waterSourceLocations(:,1), waterSourceLocations(:,2), 'bo','MarkerFaceColor','b') 
+    plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
     
       
     hold off

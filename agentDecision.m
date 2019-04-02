@@ -22,8 +22,8 @@ relativeObsUnitVector = decisionInput.relativeObsUnitVector;
 relativeWSUnitVector = decisionInput.relativeWSUnitVector;
 
 % Get repelled by close by Agents
-changeInOrientationRepel = relativeAgentOrientation;
-changeInOrientationRepel(agentDistanceList > avoidDistance, :) = [];
+changeInOrientationAvoid = relativeAgentOrientation;
+changeInOrientationAvoid(agentDistanceList > avoidDistance, :) = [];
 
 % Get attracted to Agents that are close but not very close
 changeInOrientationAttract = relativeAgentOrientation;
@@ -39,15 +39,15 @@ relativeObsUnitVector(avoidDistance < distanceFromObsLocations, :) = [];
 % changeInOrientationRepel = [changeInOrientationRepel; relativeObsUnitVector];
 
 % Add the unit vectors together and then determine the orientation
-if isempty(changeInOrientationRepel) && isempty(relativeObsUnitVector)
+if isempty(changeInOrientationAvoid) && isempty(relativeObsUnitVector)
     summedUnitVectors = agentWeights.Attraction(currAgent)*sum(changeInOrientationAttract, 1)...
                         + agentWeights.Alignment(currAgent)*sum(changeInOrientationAlign, 1)...
                         + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1);
 elseif isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the water source
-    summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationRepel, 1)...
+    summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationAvoid, 1)...
                         + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1);
-else % if you're near an obstacle forget all about the water
-    summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationRepel, 1)...
+else % if you're near an obstacle forget all about the destination
+    summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationAvoid, 1)...
                         - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
                         % + agentGains(currAgent)*sum(relativeWSUnitVector, 1);
 end
