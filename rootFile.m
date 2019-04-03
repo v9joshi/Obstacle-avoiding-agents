@@ -44,6 +44,7 @@ agentWeights.Obstacle = zeros(numberOfAgents, 1);
 fractionInformed = 0.7;
 informedAgents = round(fractionInformed*numberOfAgents);
 listOfInformedAgents = randsample(numberOfAgents, informedAgents);
+listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
 agentWeights.Destination(listOfInformedAgents) = 1;
 
 % How much do agents care about social behavior (alignment, attraction,
@@ -175,9 +176,8 @@ ylabel('Agent y position')
 title('Agent world')
 
 axis equal
-
 axisLimits.X = get(gca, 'xlim');
-axisLimits.Y = get(gca, 'ylim');
+axisLimits.Y = get(gca, 'ylim')
 
 %% Animate the motion
 figure(2)
@@ -188,30 +188,10 @@ semiAgentSize = agentLength/2;
 warning('off','arrow:warnlimits')
 
 for currTimeIndex = 1:10:length(timeList)
-%     plot([agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:));...
-%          agentsXOut(currTimeIndex,:) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:))],...
-%          [agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:));...
-%          agentsYOut(currTimeIndex,:) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:))] ,'-');
-%      
-%     hold on
-%     plot(agentsXOut(currTimeIndex,:) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:)),...
-%          agentsYOut(currTimeIndex,:) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:)) ,'v');
-%      
-%      
-%     plot(agentsXOut(currTimeIndex, listOfInformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents)),...
-%          agentsYOut(currTimeIndex, listOfInformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents)) ,'v', 'markerfacecolor','r');
-%
-%      
-%     plot(agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:)),...
-%          agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:)) ,'*');
-%      
     plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 
       hold on
     plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
     plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
-%    
-%      
-%    hold off
 
     xlabel('Agents x position')
     ylabel('Agents y position')
@@ -220,12 +200,21 @@ for currTimeIndex = 1:10:length(timeList)
     axis equal    
     xlim(axisLimits.X)
     ylim(axisLimits.Y)
-      axis(axis)
-      arrow([agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:));...
-	     agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:))],...
-	    [agentsXOut(currTimeIndex,:) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:));...
-	     agentsYOut(currTimeIndex,:) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:))],...
-	   arrowheadSize);
-      hold off
+      
+    % draw regular agents  
+    arrow([agentsXOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
+	       agentsYOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
+	      [agentsXOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
+	       agentsYOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
+	      arrowheadSize);
+   
+    % draw leader agents
+    arrow([agentsXOut(currTimeIndex,listOfInformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents));...
+	       agentsYOut(currTimeIndex,listOfInformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
+	      [agentsXOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents));...
+	       agentsYOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
+	      arrowheadSize, 'color', 'r');
+   
+    hold off
     pause(0.01);
 end
