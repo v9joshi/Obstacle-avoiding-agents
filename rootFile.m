@@ -3,10 +3,10 @@
 % with obstacles"
 % Simon Croft, Richard Budgey, Jonathan W. Pitchford and A. Jamie Wood
 % This program simulates multiple agents interacting with each other and
-% the environment. The agents have inidivual behaviour designed to 
+% the environment. The Agentss have inidivual behaviour designed to 
 % a) Move towards a goal.
 % b) Avoid obstacles in the way.
-% c) Interact with other agents so as to move in a group but also not
+% c) Interact with other Agents so as to move in a group but also not
 % collide with each other.
 
 % Clear and close everything
@@ -34,20 +34,11 @@ initialSpeed = 5*ones(numberOfAgents, 1);
 initialOrientation = 1.5*pi*ones(numberOfAgents, 1);
 
 % How many agents know the destination?
-fractionInformed = 1;
+fractionInformed = 0.3;
 informedAgents = round(fractionInformed*numberOfAgents);
+agentGains = zeros(numberOfAgents, 1);
 listOfInformedAgents = randsample(numberOfAgents, informedAgents);
-listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
-agentWeights.Destination(listOfInformedAgents) = 1;
-
-% How much do agents care about social behavior (alignment, attraction,
-% avoidance)
-agentWeights.Avoidance(:) = 1;
-agentWeights.Attraction(:) = 1;
-agentWeights.Alignment(:) = 10;
-
-% How much do agents care about obstacle avoidance?
-agentWeights.Obstacle(:) = 1;
+agentGains(listOfInformedAgents) = 1;
 
 %% Define some environment variables
 % What is the area where the agents can roam?
@@ -56,10 +47,15 @@ limitsY = [-3000, 3000];
 
 % Global attractors
 waterSourceLocations = [0, -500];
+
+% Make some obstacles
+groupDiameter = numberOfAgents*avoidDistance;
 obstaclePose = generateObstacles(avoidDistance, groupDiameter);
 
-
 %% Set simulation parameters and initialize variables
+% How long do we keep trying for a particular destination?
+maxTime = 150;
+
 % Collect all the initial states together
 initialStates = [initialPositionX; initialPositionY; initialSpeed; initialOrientation];
 
@@ -77,15 +73,12 @@ params.waterSourceLocations = waterSourceLocations;
 params.obstaclePose = obstaclePose;
 
 % Variable initialization
-destinationReached = 0; % Flag for reaching the destination
-
+destinationReached = 0;
 startTime = 0;
 statesList = initialStates;
 timeList = startTime;
-
-destination = goalLocations(1,:);
-destinationList = goalLocations;
-
+destination = waterSourceLocations(1,:);
+destinationList = waterSourceLocations;
 numberOfBouts = 0;
 
 %% Run the simulation
@@ -140,7 +133,7 @@ plot(agentsXOut, agentsYOut);
 hold on
 plot(obstaclePose(:,1), obstaclePose(:,2), 'rx','MarkerFaceColor','r') 
 plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
-plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
+plot(waterSourceLocations(:,1), waterSourceLocations(:,2), 'bo','MarkerFaceColor','b') 
 hold off
 
 xlabel('Agent x position')
@@ -148,48 +141,51 @@ ylabel('Agent y position')
 title('Agent world')
 
 axis equal
+
 axisLimits.X = get(gca, 'xlim');
 axisLimits.Y = get(gca, 'ylim');
 
 %% Animate the motion
 figure(2)
 
-% How large do we want each agent to be
+% How large do we want each bison to be
 semiAgentSize = agentLength/2;
 
-warning('off','arrow:warnlimits')
-
 for currTimeIndex = 1:10:length(timeList)
-    plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 
-      hold on
+     plot([agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:));...
+          agentsXOut(currTimeIndex,:) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:))],...
+          [agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:));...
+          agentsYOut(currTimeIndex,:) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:))] ,'-');
+      
+     hold on
+     plot(agentsXOut(currTimeIndex,:) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:)),...
+          agentsYOut(currTimeIndex,:) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:)) ,'v');
+      
+      
+     plot(agentsXOut(currTimeIndex, listOfInformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents)),...
+          agentsYOut(currTimeIndex, listOfInformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents)) ,'v', 'markerfacecolor','r');
+
+      
+     plot(agentsXOut(currTimeIndex,:) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,:)),...
+          agentsYOut(currTimeIndex,:) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,:)) ,'*');
+      
+    plot(obstaclePose(:,1), obstaclePose(:,2), 'rx','MarkerFaceColor','r') 
     plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
-    plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
+    plot(waterSourceLocations(:,1), waterSourceLocations(:,2), 'bo','MarkerFaceColor','b') 
+    
+      
+     hold off
 
-    xlabel('Agents x position')
-    ylabel('Agents y position')
+      
+%     hold on
+%     plot(bisonXOut, bisonYOut, '-');
+%     hold off
+    xlabel('Bison x position')
+    ylabel('Bison y position')
 
-    title('Agent home')
+    title('Bison ranch')
     axis equal    
     xlim(axisLimits.X)
     ylim(axisLimits.Y)
-      
-    % draw regular agents
-    if ~isempty(listOfUninformedAgents)
-        arrow([agentsXOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
-               agentsYOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
-              [agentsXOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
-               agentsYOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
-              arrowheadSize);
-    end
-    % draw leader agents
-    if ~isempty(listOfInformedAgents)
-        arrow([agentsXOut(currTimeIndex,listOfInformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents));...
-               agentsYOut(currTimeIndex,listOfInformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
-              [agentsXOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents));...
-               agentsYOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
-              arrowheadSize, 'color', 'r');
-    end
-    
-    hold off
-    pause(0.01);
+    pause(0.1);
 end

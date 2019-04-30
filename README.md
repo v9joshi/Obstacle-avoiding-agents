@@ -14,4 +14,4 @@ other agents are located relative to each agent.
 
 
 #### Project members: 
-[Helen McCreery](https://www.helenmccreery.com/), [Justin Werfel](http://people.seas.harvard.edu/~jkwerfel/), Stefan Popp and [Varun Joshi](https://www.varun-joshi.com).
+[Helen McCreery](https://www.helenmccreery.com/), [Justin Werfel](http://people.seas.harvard.edu/~jkwerfel/), Stefan Popp and Varun Joshi.
