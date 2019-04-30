@@ -41,7 +41,7 @@ agentWeights.Alignment = zeros(numberOfAgents, 1);
 agentWeights.Obstacle = zeros(numberOfAgents, 1);
 
 % How many agents know the destination?
-fractionInformed = 0.7;
+fractionInformed = 1;
 informedAgents = round(fractionInformed*numberOfAgents);
 listOfInformedAgents = randsample(numberOfAgents, informedAgents);
 listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
@@ -177,7 +177,7 @@ title('Agent world')
 
 axis equal
 axisLimits.X = get(gca, 'xlim');
-axisLimits.Y = get(gca, 'ylim')
+axisLimits.Y = get(gca, 'ylim');
 
 %% Animate the motion
 figure(2)
@@ -201,20 +201,23 @@ for currTimeIndex = 1:10:length(timeList)
     xlim(axisLimits.X)
     ylim(axisLimits.Y)
       
-    % draw regular agents  
-    arrow([agentsXOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
-	       agentsYOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
-	      [agentsXOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
-	       agentsYOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
-	      arrowheadSize);
-   
+    % draw regular agents
+    if ~isempty(listOfUninformedAgents)
+        arrow([agentsXOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
+               agentsYOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
+              [agentsXOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
+               agentsYOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
+              arrowheadSize);
+    end
     % draw leader agents
-    arrow([agentsXOut(currTimeIndex,listOfInformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents));...
-	       agentsYOut(currTimeIndex,listOfInformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
-	      [agentsXOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents));...
-	       agentsYOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
-	      arrowheadSize, 'color', 'r');
-   
+    if ~isempty(listOfInformedAgents)
+        arrow([agentsXOut(currTimeIndex,listOfInformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents));...
+               agentsYOut(currTimeIndex,listOfInformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
+              [agentsXOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents));...
+               agentsYOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
+              arrowheadSize, 'color', 'r');
+    end
+    
     hold off
     pause(0.01);
 end
