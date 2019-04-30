@@ -51,7 +51,7 @@ agentWeights.Destination(listOfInformedAgents) = 1;
 % avoidance)
 agentWeights.Avoidance(:) = 1;
 agentWeights.Attraction(:) = 1;
-agentWeights.Alignment(:) = 1;
+agentWeights.Alignment(:) = 10;
 
 % How much do agents care about obstacle avoidance?
 agentWeights.Obstacle(:) = 1;
