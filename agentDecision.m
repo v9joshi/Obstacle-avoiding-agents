@@ -5,6 +5,8 @@ function actionInput = agentDecision(currAgent, params, decisionInput, actionInp
 avoidDistance = params.avoidDistance;
 attractDistance = params.attractDistance;
 alignDistance = params.alignDistance;
+obstacleDistance = params.obstacleDistance;
+
 agentWeights = params.agentWeights;
 
 % % unpack the states of the agent
@@ -34,7 +36,7 @@ changeInOrientationAlign = absoluteAgentOrientation;
 changeInOrientationAlign(avoidDistance > agentDistanceList | agentDistanceList > alignDistance, :) = [];
 
 % Get repelled by obstacles    
-relativeObsUnitVector(avoidDistance < distanceFromObsLocations, :) = [];
+relativeObsUnitVector(obstacleDistance < distanceFromObsLocations, :) = [];
 
 % changeInOrientationRepel = [changeInOrientationRepel; relativeObsUnitVector];
 

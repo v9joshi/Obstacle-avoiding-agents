@@ -19,6 +19,7 @@ arrowheadSize = 10; % Size of arrowheads on plotted agents, in pixels.
 avoidDistance = 2; % Agents within this distance of each other will repel each other.
 alignDistance = 5; % Agents within this distance of each other will align with each other.
 attractDistance = 10; % Agents within this distance of each other will attract each other.
+obstacleDistance = 1; % Agents within this distance of an obstacle will avoid the obstacle.
 
 % Agent dynamics
 turnRate = 2; % units of radians per second. speed limit
@@ -98,6 +99,7 @@ params.numberOfAgents = numberOfAgents;
 params.avoidDistance = avoidDistance;
 params.alignDistance = alignDistance;
 params.attractDistance = attractDistance;
+params.obstacleDistance = obstacleDistance;
 
 params.turnRate = turnRate;
 params.stepTime = stepTime;
