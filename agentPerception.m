@@ -25,8 +25,19 @@ otherAgentPositions(currAgent, :) = [];
 otherAgentOrientations = agentOrientation;
 otherAgentOrientations(currAgent) =  [];
 
+% Determine the visibility of other agents and drop agents that can't be
+% seen
+agentLength = params.agentLength;
+agentVisible = ones(size(otherAgentPositions, 1), 1);
+for otherAgentNum = 1:size(otherAgentPositions, 1)
+    agentVisible(otherAgentNum) = isAgentVisible(currAgentPosition, otherAgentPositions(otherAgentNum,:), obstacleLocations, agentLength);
+end
+
+otherAgentPositions(~agentVisible, :) = []; % drop agent if obstructed
+otherAgentOrientations(~agentVisible, :) = []; % drop agent if obstructed
+
 % What is the distance between our Agent and the rest?
-relativePositions = otherAgentPositions - repmat(currAgentPosition, numberOfAgents - 1, 1);
+relativePositions = otherAgentPositions - repmat(currAgentPosition, size(otherAgentPositions, 1), 1);
 agentDistanceList = sqrt(sum(relativePositions.^2, 2));
 decisionInput.agentDistanceList = agentDistanceList;
 
