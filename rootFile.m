@@ -16,12 +16,15 @@ agentLength = 1; % The length (head to tail) of each Agents in m. Used only for 
 arrowheadSize = 10; % Size of arrowheads on plotted agents, in pixels.
 
 % Radii for the agents
-avoidDistance = 1; % Agents within this distance of each other will repel each other.
-alignDistance = 10; % Agents within this distance of each other will align with each other.
+avoidDistance = 2; % Agents within this distance of each other will repel each other.
+alignDistance = 5; % Agents within this distance of each other will align with each other.
 attractDistance = 10; % Agents within this distance of each other will attract each other.
 
 % Agent dynamics
 turnRate = 2; % units of radians per second. speed limit
+
+% How close to the destination do you need to be to have succeeded?
+destinationSuccessCriterion = 5;
 
 % Simulation parameters
 totalSimulationTime = 200; % How long does the simulation run?
@@ -51,7 +54,7 @@ agentWeights.Destination(listOfInformedAgents) = 1;
 % avoidance)
 agentWeights.Avoidance(:) = 1;
 agentWeights.Attraction(:) = 1;
-agentWeights.Alignment(:) = 10;
+agentWeights.Alignment(:) = 1;
 
 % How much do agents care about obstacle avoidance?
 agentWeights.Obstacle(:) = 1;
@@ -78,7 +81,7 @@ wallObstacleB.Y = 15*ones(length(wallObstacleB.X),1);
 obstacleLocations = [wallObstacleA.X(:), wallObstacleA.Y(:);
                      wallObstacleB.X(:), wallObstacleB.Y(:)];
                  
-% Plot the obstacle
+%% Plot the obstacle
 figure(11)
 plot(wallObstacleB.X, wallObstacleB.Y, 'rx')
 xlim(limitsX);
@@ -103,9 +106,9 @@ params.agentWeights = agentWeights;
 params.waterSourceLocations = goalLocations;
 params.obstacleLocations = obstacleLocations;
 
-% Variable initialization
-destinationReached = 0; % Flag for reaching the destination
+params.agentLength = agentLength;
 
+% Variable initialization
 startTime = 0;
 statesList = initialStates;
 timeList = startTime;
@@ -114,6 +117,8 @@ destination = goalLocations(1,:);
 destinationList = goalLocations;
 
 numberOfBouts = 0;
+goalReachTime = zeros(numberOfAgents,1); % time when goal was reached
+destinationReached = zeros(numberOfAgents,1); % flag for reaching the goal
 
 %% Run the simulation
 while timeList(end) < totalSimulationTime
@@ -135,25 +140,37 @@ while timeList(end) < totalSimulationTime
         actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
     end
   
+    % If destination was reached, set desired agent speed and current
+    % agents speed to 0.1
+    actionInput.desiredSpeed(destinationReached == 0 ) = 0.1;
+    statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
+
     % run the action step for all the agents and update the state list
     statesNow = agentAction(statesNow, params, actionInput);  
     
     % add on the states
     statesList = [statesList, statesNow];
     
-    % check if destination has been reached
-    meanAgentX = mean(statesNow(1:numberOfAgents));
-    meanAgentY = mean(statesNow(numberOfAgents + 1: 2*numberOfAgents));
+    % check if destination has been reached for each agent
+    agentX = statesNow(1:numberOfAgents);
+    agentY = statesNow(numberOfAgents + 1: 2*numberOfAgents);
     
-    distanceToGoal = sqrt((meanAgentX -  destination(1)).^2 + (meanAgentY - destination(2)).^2);
+    distanceToGoal = sqrt((agentX -  destination(1)).^2 + (agentY - destination(2)).^2);
     
-    if min(distanceToGoal) < 5
-        destinationReached = 1;
-        goalReachTime = timeList(end);
-        
-        display(['Reached destination at time t = ', num2str(goalReachTime)]);
-        break
-    end    
+    % If agent is close to goal and hasn't been marked as having reached
+    % the destination yet, then record the time it reached, and mark it as having reached 
+    goalReachTime(distanceToGoal.*~destinationReached < destinationSuccessCriterion) = timeList(end);
+    destinationReached(distanceToGoal < destinationSuccessCriterion) = 1;
+    
+    % How many agents have reached the destination?
+    fractionReached = sum(destinationReached)/numberOfAgents;
+    
+    % If all the agents reached the destination, then stop the simulation
+    if fractionReached == 1
+        display('All agents have succesfully reached the destination');
+        break;
+    end
+    
 end
 
 %% Unpack output states
@@ -181,7 +198,6 @@ axisLimits.Y = get(gca, 'ylim');
 
 %% Animate the motion
 figure(2)
-
 % How large do we want each agent to be
 semiAgentSize = agentLength/2;
 
