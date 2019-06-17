@@ -206,6 +206,7 @@ semiAgentSize = agentLength/2;
 warning('off','arrow:warnlimits')
 
 for currTimeIndex = 1:10:length(timeList)
+    set(0, 'currentfigure',2);
     plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 
       hold on
     plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
