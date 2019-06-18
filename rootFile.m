@@ -169,11 +169,13 @@ while timeList(end) < totalSimulationTime
     
     % If all the agents reached the destination, then stop the simulation
     if fractionReached == 1
-        display('All agents have succesfully reached the destination');
         break;
-    end
+     end
     
 end
+
+% Output number of succesfuly agents
+display([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
 
 %% Unpack output states
 agentsXOut = statesList(1:numberOfAgents,:)';
