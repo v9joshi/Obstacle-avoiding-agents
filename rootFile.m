@@ -162,6 +162,7 @@ while timeList(end) < totalSimulationTime
     % If agent is close to goal and hasn't been marked as having reached
     % the destination yet, then record the time it reached, and mark it as having reached 
     goalReachTime(distanceToGoal.*~destinationReached < destinationSuccessCriterion) = timeList(end);
+    goalReachTime(distanceToGoal.*~destinationReached < destinationSuccessCriterion & ~destinationReached) = timeList(end);
     destinationReached(distanceToGoal < destinationSuccessCriterion) = 1;
     
     % How many agents have reached the destination?
