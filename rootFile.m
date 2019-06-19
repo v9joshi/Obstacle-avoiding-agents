@@ -10,7 +10,7 @@ clc; close all; clear all;
 
 %% Define some parameters
 % Agent parameters
-numberOfAgents = 10; % How many Agents exist?
+numberOfAgents = 20; % How many Agents exist?
 
 agentLength = 1; % The length (head to tail) of each Agents in m. Used only for plotting.
 arrowheadSize = 10; % Size of arrowheads on plotted agents, in pixels.
@@ -28,12 +28,14 @@ turnRate = 2; % units of radians per second. speed limit
 destinationSuccessCriterion = 5;
 
 % Simulation parameters
-totalSimulationTime = 200; % How long does the simulation run?
+totalSimulationTime = 300; % How long does the simulation run?
 stepTime = 0.1; % Step time for each loop of the simulation
 
 % What are the initial states of the agents?
-initialPositionX = zeros(numberOfAgents, 1); %0.2*(1:1:numberOfAgents)';
-initialPositionY = 0.5*(1:1:numberOfAgents)'; %zeros(numberOfAgents, 1);
+%initialPositionX = zeros(numberOfAgents, 1); %0.2*(1:1:numberOfAgents)';
+%initialPositionY = 0.5*(1:1:numberOfAgents)'; %zeros(numberOfAgents, 1);
+initialPositionX = (5+5).*rand(numberOfAgents,1) - 5;
+initialPositionY = (5+5).*rand(numberOfAgents,1) - 5;
 initialSpeed = 1*ones(numberOfAgents, 1); % m/s
 initialOrientation = zeros(numberOfAgents, 1); % radians
 
@@ -61,34 +63,76 @@ agentWeights.Alignment(:) = 1;
 agentWeights.Obstacle(:) = 1;
 
 %% Define some environment variables
+
 % What is the area where the agents can roam?
 limitsX = [-30, 30];
-limitsY = [-30, 30];
+limitsY = [-10, 50];
 
 % Global attractors
-goalLocations = [-20, 20];
+goalLocations = [0, 50];
 
 % Obstacle parameters
+obstacleLocation = [0, 20];
+obstacleType = 1;    % convex arc = 1, wall = 2, or concave arc = 3
+obstacleScale = 10;  % length scale of obstacle
+arcAngle = pi;       % how many radians should arc obstacles cover?
+
 groupDiameter = numberOfAgents*avoidDistance;
-obstacleSpacing = avoidDistance/5; % Distance between two points on the obstacle
+obstacleSpacing = avoidDistance/10; % Distance between two points on the obstacle
 
 % Make some obstacles
-wallObstacleA.Y = []; %  10:avoidDistance/5:15;
-wallObstacleA.X = []; % -15*ones(length(wallObstacleA.Y),1);
+% make convex arc obstacle
+if obstacleType == 1
+    arcRadius = obstacleScale/2;
+    obstacleLocation = [obstacleLocation(1), obstacleLocation(2) + ...
+        arcRadius/2];
+    obstacle = obstArc(obstacleLocation(1),obstacleLocation(2),...
+        arcRadius,(pi/2)+(arcAngle/2),(pi/2)-(arcAngle/2),obstacleSpacing);
+    obstacleX = obstacle(:,1);
+    obstacleY = obstacle(:,2);
+end
+% make wall obstacle
+if obstacleType == 2
+    x1 = obstacleLocation(1) - obstacleScale/2;
+    y1 = obstacleLocation(2);
+    x2 = obstacleLocation(1) + obstacleScale/2;
+    y2 = obstacleLocation(2);
+    obstacle = obstLine(x1, y1, x2, y2, obstacleSpacing);
+    obstacleX = obstacle(:,1);
+    obstacleY = obstacle(:,2);
+end
+% make concave arc obstacle
+if obstacleType == 3
+    arcRadius = obstacleScale/2;
+    obstacleLocation = [obstacleLocation(1), obstacleLocation(2) - ...
+        arcRadius/2];
+    obstacle = obstArc(obstacleLocation(1),obstacleLocation(2),...
+        arcRadius,(pi/2)-(arcAngle/2),(pi/2)+(arcAngle/2),obstacleSpacing);
+    obstacleX = obstacle(:,1);
+    obstacleY = obstacle(:,2);
+end
+%wallObstacleA.Y = []; %  10:avoidDistance/5:15;
+%wallObstacleA.X = []; % -15*ones(length(wallObstacleA.Y),1);
 
-wallObstacleB.X = -15:obstacleSpacing:(-15 + 2*groupDiameter);
-wallObstacleB.Y = 15*ones(length(wallObstacleB.X),1);
+%wallObstacleB.X = -15:obstacleSpacing:(-15 + 2*groupDiameter);
+%wallObstacleB.Y = 15*ones(length(wallObstacleB.X),1);
 
-obstacleLocations = [wallObstacleA.X(:), wallObstacleA.Y(:);
-                     wallObstacleB.X(:), wallObstacleB.Y(:)];
+%obstacleLocations = [wallObstacleA.X(:), wallObstacleA.Y(:);
+%                     wallObstacleB.X(:), wallObstacleB.Y(:)];
+obstacleLocations = [obstacleX(:), obstacleY(:)];
                  
 %% Plot the obstacle
-figure(11)
-plot(wallObstacleB.X, wallObstacleB.Y, 'rx')
-xlim(limitsX);
-xlim(limitsY);
+%figure(11)
+%plot(wallObstacleB.X, wallObstacleB.Y, 'rx')
+%xlim(limitsX);
+%xlim(limitsY);
 
-axis 'equal'
+%% Plot the obstacle
+%figure(11)
+%plot(obstacleX, obstacleY, 'rx')
+%%xlim(limitsX);
+%%xlim(limitsY);
+%axis 'equal'
 
 %% Set simulation parameters and initialize variables
 % Collect all the initial states together
