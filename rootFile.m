@@ -73,7 +73,7 @@ goalLocations = [0, 50];
 
 % Obstacle parameters
 obstacleLocation = [0, 20];
-obstacleType = 1;    % convex arc = 1, wall = 2, or concave arc = 3
+obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3
 obstacleScale = 10;  % length scale of obstacle
 arcAngle = pi;       % how many radians should arc obstacles cover?
 
@@ -220,7 +220,9 @@ end
 
 % Output number of succesfuly agents
 display([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
-
+display(['Fastest time to reach goal: ', num2str(min(goalReachTime))])
+display(['Median time to reach goal: ', num2str(median(goalReachTime))])
+display(['Longest time to reach goal: ', num2str(max(goalReachTime))])
 %% Unpack output states
 agentsXOut = statesList(1:numberOfAgents,:)';
 agentsYOut = statesList(numberOfAgents + 1: 2*numberOfAgents,:)';
