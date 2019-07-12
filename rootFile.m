@@ -6,19 +6,21 @@
 % collide with each other.
 
 % Clear and close everything
-clc; close all; clear all;
+clc; close all; clear;
 
 %% Define some parameters
 % Agent parameters
-numberOfAgents = 20; % How many Agents exist?
+numberOfAgents = 10; % How many Agents exist?
 
 agentLength = 1; % The length (head to tail) of each Agents in m. Used only for plotting.
 arrowheadSize = 10; % Size of arrowheads on plotted agents, in pixels.
 
 % Radii for the agents
-avoidDistance = 2; % Agents within this distance of each other will repel each other.
-alignDistance = 5; % Agents within this distance of each other will align with each other.
-attractDistance = 10; % Agents within this distance of each other will attract each other.
+modelCalovi = 1; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
+avoidDistance = 1; % Closer than that to another agent = repulsion farther = attraction.
+alignDistance = 6; % Distance to other agents where alignment is maximal.
+alignYintercept = 0.6; % Y-intercept of alignment gaussian.
+attractDistance = 7; % Distance to other agents where attraction is maximal.
 obstacleDistance = 1; % Agents within this distance of an obstacle will avoid the obstacle.
 
 % Agent dynamics
@@ -28,7 +30,7 @@ turnRate = 2; % units of radians per second. speed limit
 destinationSuccessCriterion = 5;
 
 % Simulation parameters
-totalSimulationTime = 300; % How long does the simulation run?
+totalSimulationTime = 200; % How long does the simulation run?
 stepTime = 0.1; % Step time for each loop of the simulation
 
 % What are the initial states of the agents?
@@ -55,8 +57,7 @@ agentWeights.Destination(listOfInformedAgents) = 1;
 
 % How much do agents care about social behavior (alignment, attraction,
 % avoidance)
-agentWeights.Avoidance(:) = 1;
-agentWeights.Attraction(:) = 1;
+agentWeights.Attraction(:) = 1.8;
 agentWeights.Alignment(:) = 1;
 
 % How much do agents care about obstacle avoidance?
@@ -78,7 +79,7 @@ obstacleScale = 10;  % length scale of obstacle
 arcAngle = pi;       % how many radians should arc obstacles cover?
 
 groupDiameter = numberOfAgents*avoidDistance;
-obstacleSpacing = avoidDistance/10; % Distance between two points on the obstacle
+obstacleSpacing = avoidDistance/20; % Distance between two points on the obstacle
 
 % Make some obstacles
 % make convex arc obstacle
@@ -122,17 +123,17 @@ end
 obstacleLocations = [obstacleX(:), obstacleY(:)];
                  
 %% Plot the obstacle
-%figure(11)
-%plot(wallObstacleB.X, wallObstacleB.Y, 'rx')
-%xlim(limitsX);
-%xlim(limitsY);
+% figure(11)
+% plot(wallObstacleB.X, wallObstacleB.Y, 'rx')
+% xlim(limitsX);
+% xlim(limitsY);
 
 %% Plot the obstacle
-%figure(11)
-%plot(obstacleX, obstacleY, 'rx')
-%%xlim(limitsX);
-%%xlim(limitsY);
-%axis 'equal'
+% figure(11)
+% plot(obstacleX, obstacleY, 'rx')
+% %xlim(limitsX);
+% %xlim(limitsY);
+% axis 'equal'
 
 %% Set simulation parameters and initialize variables
 % Collect all the initial states together
@@ -142,6 +143,7 @@ initialStates = [initialPositionX; initialPositionY; initialSpeed; initialOrient
 params.numberOfAgents = numberOfAgents;
 params.avoidDistance = avoidDistance;
 params.alignDistance = alignDistance;
+params.alignYintercept = alignYintercept;
 params.attractDistance = attractDistance;
 params.obstacleDistance = obstacleDistance;
 
@@ -163,7 +165,7 @@ destination = goalLocations(1,:);
 destinationList = goalLocations;
 
 numberOfBouts = 0;
-goalReachTime = zeros(numberOfAgents,1); % time when goal was reached
+goalReachTime = NaN(numberOfAgents,1); % time when goal was reached
 destinationReached = zeros(numberOfAgents,1); % flag for reaching the goal
 
 %% Run the simulation
@@ -183,7 +185,11 @@ while timeList(end) < totalSimulationTime
         decisionInput = agentPerception(currAgent, statesNow, params);    
     
         % run the decision step and update action input
-        actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
+        if modelCalovi == 1 % Gaussian curves rather than radii
+            actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
+        else % Fixed radii
+            actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
+        end
     end
   
     % If destination was reached, set desired agent speed and current
@@ -220,9 +226,7 @@ end
 
 % Output number of succesfuly agents
 display([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
-display(['Fastest time to reach goal: ', num2str(min(goalReachTime))])
-display(['Median time to reach goal: ', num2str(median(goalReachTime))])
-display(['Longest time to reach goal: ', num2str(max(goalReachTime))])
+
 %% Unpack output states
 agentsXOut = statesList(1:numberOfAgents,:)';
 agentsYOut = statesList(numberOfAgents + 1: 2*numberOfAgents,:)';
