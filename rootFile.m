@@ -74,7 +74,7 @@ goalLocations = [0, 50];
 
 % Obstacle parameters
 obstacleLocation = [0, 20];
-obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3
+obstacleType = 2;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
 obstacleScale = 10;  % length scale of obstacle
 arcAngle = pi;       % how many radians should arc obstacles cover?
 
@@ -82,36 +82,40 @@ groupDiameter = numberOfAgents*avoidDistance;
 obstacleSpacing = avoidDistance/20; % Distance between two points on the obstacle
 
 % Make some obstacles
-% make convex arc obstacle
-if obstacleType == 1
-    arcRadius = obstacleScale/2;
-    obstacleLocation = [obstacleLocation(1), obstacleLocation(2) + ...
-        arcRadius/2];
-    obstacle = obstArc(obstacleLocation(1),obstacleLocation(2),...
-        arcRadius,(pi/2)+(arcAngle/2),(pi/2)-(arcAngle/2),obstacleSpacing);
+obstacleX = [];
+obstacleY = [];
+
+switch obstacleType
+    % make convex arc obstacle
+    case 1
+        arcRadius = obstacleScale/2;
+        obstacleLocation = [obstacleLocation(1), obstacleLocation(2) + ...
+                             arcRadius/2];
+        obstacle = obstArc(obstacleLocation(1),obstacleLocation(2),...
+                           arcRadius,(pi/2)+(arcAngle/2),(pi/2)-(arcAngle/2),obstacleSpacing);
+    % make wall obstacle
+    case 2
+        x1 = obstacleLocation(1) - obstacleScale/2;
+        y1 = obstacleLocation(2);
+        x2 = obstacleLocation(1) + obstacleScale/2;
+        y2 = obstacleLocation(2);
+        obstacle = obstLine(x1, y1, x2, y2, obstacleSpacing);
+    % make concave arc obstacle
+    case 3
+        arcRadius = obstacleScale/2;
+        obstacleLocation = [obstacleLocation(1), obstacleLocation(2) - ...
+                            arcRadius/2];
+        obstacle = obstArc(obstacleLocation(1),obstacleLocation(2),...
+                           arcRadius,(pi/2)-(arcAngle/2),(pi/2)+(arcAngle/2),obstacleSpacing);
+    otherwise
+        obstacle = [];
+end
+
+if ~isempty(obstacle)
     obstacleX = obstacle(:,1);
     obstacleY = obstacle(:,2);
 end
-% make wall obstacle
-if obstacleType == 2
-    x1 = obstacleLocation(1) - obstacleScale/2;
-    y1 = obstacleLocation(2);
-    x2 = obstacleLocation(1) + obstacleScale/2;
-    y2 = obstacleLocation(2);
-    obstacle = obstLine(x1, y1, x2, y2, obstacleSpacing);
-    obstacleX = obstacle(:,1);
-    obstacleY = obstacle(:,2);
-end
-% make concave arc obstacle
-if obstacleType == 3
-    arcRadius = obstacleScale/2;
-    obstacleLocation = [obstacleLocation(1), obstacleLocation(2) - ...
-        arcRadius/2];
-    obstacle = obstArc(obstacleLocation(1),obstacleLocation(2),...
-        arcRadius,(pi/2)-(arcAngle/2),(pi/2)+(arcAngle/2),obstacleSpacing);
-    obstacleX = obstacle(:,1);
-    obstacleY = obstacle(:,2);
-end
+
 %wallObstacleA.Y = []; %  10:avoidDistance/5:15;
 %wallObstacleA.X = []; % -15*ones(length(wallObstacleA.Y),1);
 
@@ -237,7 +241,7 @@ agentsOrientationOut = statesList(3*numberOfAgents + 1 :end,:)';
 figure(1)
 plot(agentsXOut, agentsYOut);
 hold on
-plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 
+plot(obstacleLocations(:,1), obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
 plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
 plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
 hold off
@@ -259,11 +263,11 @@ warning('off','arrow:warnlimits')
 
 for currTimeIndex = 1:10:length(timeList)
     set(0, 'currentfigure',2);
-    plot(obstacleLocations(:,1), obstacleLocations(:,2), 'rx','MarkerFaceColor','r') 
-      hold on
-    plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
     plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
-
+    hold on
+    plot(destinationList(:,1), destinationList(:,2), 'bo','MarkerFaceColor','g') 
+    plot(obstacleLocations(:,1), obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
+   
     xlabel('Agents x position')
     ylabel('Agents y position')
 
