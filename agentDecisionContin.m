@@ -28,11 +28,11 @@ relativeWSUnitVector = decisionInput.relativeWSUnitVector;
 
 % Get repulsed by close & attracted by farther away agents
 forcesOfAtt = (agentDistanceList - avoidDistance)./(1+(agentDistanceList/attractDistance).^2);
-changeInOrientationAttract = relativeAgentOrientation.*forcesOfAtt;
+changeInOrientationAttract = relativeAgentOrientation.*[forcesOfAtt, forcesOfAtt];
 
 % Get aligned with Agents
 forcesOfAlign = (alignYintercept + agentDistanceList).^(-(agentDistanceList/alignDistance).^2);
-changeInOrientationAlign = absoluteAgentOrientation.*forcesOfAlign;
+changeInOrientationAlign = absoluteAgentOrientation.*[forcesOfAlign, forcesOfAlign];
 
 % Get repelled by obstacles    
 relativeObsUnitVector(obstacleDistance < distanceFromObsLocations, :) = [];
