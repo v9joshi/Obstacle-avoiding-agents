@@ -3,7 +3,7 @@ function goalVisibility = isGoalVisible(observingAgent, decisionInput, params, o
 
 % Unpack params & variables
 goalDistance = decisionInput.distanceFromWSLocations;
-goalSize = params.obstacleDistance;
+goalSize = 10;
 relativeWSUnitVector = decisionInput.relativeWSUnitVector;
 
 % Assume goal is visible
@@ -16,10 +16,11 @@ relativeWSUnitVector = decisionInput.relativeWSUnitVector;
     % Determine visual obstruction
     relativeObstacleAngle = atan2(obstacles(:,2) - observingAgent(2), obstacles(:,1) - observingAgent(1));
     obstacleDistance = sqrt(sum((obstacles - repmat(observingAgent, size(obstacles, 1), 1)).^2, 2));
+    relativeWSAngle = atan2(relativeWSUnitVector(2), relativeWSUnitVector(1));
     
     % Determine which obstructions are active
     agentObstruction = zeros(length(obstacles), 1);
-    agentObstruction((abs(relativeObstacleAngle - relativeWSUnitVector) < angularRange) & (obstacleDistance < goalDistance)) = 1;
+    agentObstruction((abs(relativeObstacleAngle - relativeWSAngle) < angularRange) & (obstacleDistance < goalDistance)) = 1;
     
     % Set visibility
     goalVisibility = ~sum(agentObstruction); % if even one obstruction is active then visibility is 0    
