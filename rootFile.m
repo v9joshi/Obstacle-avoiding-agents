@@ -15,6 +15,8 @@ numberOfAgents = 10; % How many Agents exist?
 agentLength = 1; % The length (head to tail) of each Agents in m. Used only for plotting.
 arrowheadSize = 7; % Size of arrowheads on plotted agents, in pixels.
 
+goalSize = 5; % How large is the goal. This affects visibility and how close the agents have to be to the goal location to succeed
+
 % Radii for the agents
 modelCalovi = 1; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
 avoidDistance = 1 + 0.15*numberOfAgents; % Closer than that to another agent = repulsion farther = attraction.*
@@ -28,7 +30,7 @@ obstacleVisibility = 10; % Obstacle visibility: Higher = Obs. avoidance 'starts'
 turnRate = 2; % units of radians per second. speed limit
 
 % How close to the destination do you need to be to have succeeded?
-destinationSuccessCriterion = 5;
+destinationSuccessCriterion = goalSize;
 
 % Simulation parameters
 totalSimulationTime = 100; % How long does the simulation run?
@@ -162,6 +164,7 @@ params.waterSourceLocations = goalLocations;
 params.obstacleLocations = obstacleLocations;
 
 params.agentLength = agentLength;
+params.goalSize = goalSize;
 
 % Variable initialization
 startTime = 0;
@@ -278,14 +281,14 @@ for currTimeIndex = 1:10:length(timeList)
     axis equal    
     xlim(axisLimits.X)
     ylim(axisLimits.Y)
-      
+    
     % draw regular agents
     if ~isempty(listOfUninformedAgents)
         arrow([agentsXOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
                agentsYOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
               [agentsXOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
                agentsYOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
-              arrowheadSize);
+              arrowheadSize, 'color', 'k');
     end
     % draw leader agents
     if ~isempty(listOfInformedAgents)
