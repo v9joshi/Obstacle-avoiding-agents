@@ -11,7 +11,7 @@ relativeWSUnitVector = decisionInput.relativeWSUnitVector;
     
     % Angular range required for observation. For now replaced by obstacle
     % avoidance distance
-%    angularRange = goalSize/goalDistance; % Goal subtends this angle at agent's eye
+    angularRange = goalSize/goalDistance; % Goal subtends this angle at agent's eye
 
     % Determine visual obstruction
     relativeObstacleAngle = atan2(obstacles(:,2) - observingAgent(2), obstacles(:,1) - observingAgent(1));
@@ -19,7 +19,7 @@ relativeWSUnitVector = decisionInput.relativeWSUnitVector;
     
     % Determine which obstructions are active
     agentObstruction = zeros(length(obstacles), 1);
-    agentObstruction((abs(relativeObstacleAngle - relativeWSUnitVector) < goalSize) & (obstacleDistance < goalDistance)) = 1;
+    agentObstruction((abs(relativeObstacleAngle - relativeWSUnitVector) < angularRange) & (obstacleDistance < goalDistance)) = 1;
     
     % Set visibility
     goalVisibility = ~sum(agentObstruction); % if even one obstruction is active then visibility is 0    
