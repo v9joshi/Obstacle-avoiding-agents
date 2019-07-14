@@ -26,21 +26,23 @@ relativeAgentOrientation = decisionInput.relativeAgentOrientation;
 absoluteAgentOrientation = decisionInput.absoluteAgentOrientation;
 distanceFromObsLocations = decisionInput.distanceFromObsLocations;
 relativeWSUnitVector = decisionInput.relativeWSUnitVector;
+relativeObsUnitVector = decisionInput.relativeObsUnitVector;
 goalVisibility = decisionInput.goalVisibility;
 
 % Get repulsed by close & attracted by farther away agents
 forcesOfAtt = (agentDistanceList - avoidDistance)./(1+(agentDistanceList/attractDistance).^2);
-changeInOrientationAttract = relativeAgentOrientation.*[forcesOfAtt forcesOfAtt];
+changeInOrientationAttract = relativeAgentOrientation.*[forcesOfAtt, forcesOfAtt];
 
 % Get aligned with Agents
 forcesOfAlign = (alignYintercept + agentDistanceList).^(-(agentDistanceList/alignDistance).^2);
-changeInOrientationAlign = absoluteAgentOrientation.*[forcesOfAlign forcesOfAlign];
+changeInOrientationAlign = absoluteAgentOrientation.*[forcesOfAlign, forcesOfAlign];
 
 % Get repelled by obstacles. Exponentially more the closer you are
-relativeObsUnitVector = (1./distanceFromObsLocations)./obstacleSize;
-relativeObsUnitVector(distanceFromObsLocations > obstacleVisibility, :) = 0; % No repulsion outside visual range
-relativeObsUnitVector(distanceFromObsLocations < obstacleDistance, :) =...
-    relativeObsUnitVector(distanceFromObsLocations < obstacleDistance, :).*1000; % Avoid very close things a lot
+forcesOfObsRep = (1./distanceFromObsLocations)./obstacleSize;
+forcesOfObsRep(distanceFromObsLocations > obstacleVisibility, :) = 0; % No repulsion outside visual range
+forcesOfObsRep(distanceFromObsLocations < obstacleDistance, :) =...
+    forcesOfObsRep(distanceFromObsLocations < obstacleDistance, :).*1000; % Avoid very close things a lot
+relativeObsUnitVector = relativeObsUnitVector.*[forcesOfObsRep, forcesOfObsRep];
 
 if goalVisibility == 1
     relativeObsUnitVector = 0;
