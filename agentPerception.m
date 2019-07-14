@@ -65,6 +65,10 @@ decisionInput.distanceFromObsLocations = distanceFromObsLocations;
 decisionInput.relativeObsUnitVector = [relativeObsLocations(:,1)./distanceFromObsLocations, relativeObsLocations(:,2)./distanceFromObsLocations];
 
 % Use vectors to obstacle and goal to determine goal visibility
-decisionInput.goalVisibility = isGoalVisible(currAgentPosition, decisionInput, params, obstacleLocations);
+% decisionInput.goalVisibility = isGoalVisible(currAgentPosition, decisionInput, params, obstacleLocations);
+goalSize = params.goalSize;
+for goalNumber = 1:size(waterSourceLocations, 1)
+    decisionInput.goalVisibility(goalNumber) = isAgentVisible(currAgentPosition, waterSourceLocations(goalNumber, :), obstacleLocations, goalSize);
+end
 
 end
