@@ -13,15 +13,16 @@ clc; close all; clear;
 numberOfAgents = 10; % How many Agents exist?
 
 agentLength = 1; % The length (head to tail) of each Agents in m. Used only for plotting.
-arrowheadSize = 10; % Size of arrowheads on plotted agents, in pixels.
+arrowheadSize = 7; % Size of arrowheads on plotted agents, in pixels.
 
 % Radii for the agents
 modelCalovi = 1; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
-avoidDistance = 1; % Closer than that to another agent = repulsion farther = attraction.
+avoidDistance = 1 + 0.15*numberOfAgents; % Closer than that to another agent = repulsion farther = attraction.*
 alignDistance = 6; % Distance to other agents where alignment is maximal.
 alignYintercept = 0.6; % Y-intercept of alignment gaussian.
 attractDistance = 7; % Distance to other agents where attraction is maximal.
-obstacleDistance = 1; % Agents within this distance of an obstacle will avoid the obstacle.
+obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
+obstacleVisibility = 5; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
 
 % Agent dynamics
 turnRate = 2; % units of radians per second. speed limit
@@ -61,7 +62,7 @@ agentWeights.Attraction(:) = 1.8;
 agentWeights.Alignment(:) = 1;
 
 % How much do agents care about obstacle avoidance?
-agentWeights.Obstacle(:) = 1;
+agentWeights.Obstacle(:) = 5;
 
 %% Define some environment variables
 
@@ -74,7 +75,7 @@ goalLocations = [0, 50];
 
 % Obstacle parameters
 obstacleLocation = [0, 20];
-obstacleType = 2;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
+obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
 obstacleScale = 10;  % length scale of obstacle
 arcAngle = pi;       % how many radians should arc obstacles cover?
 
@@ -150,6 +151,7 @@ params.alignDistance = alignDistance;
 params.alignYintercept = alignYintercept;
 params.attractDistance = attractDistance;
 params.obstacleDistance = obstacleDistance;
+params.obstacleVisibility = obstacleVisibility;
 
 params.turnRate = turnRate;
 params.stepTime = stepTime;
@@ -296,3 +298,8 @@ for currTimeIndex = 1:10:length(timeList)
     hold off
     pause(0.01);
 end
+
+% * avoidDistance function determined by:
+%   1. simulating different group sizes w/ different avoidDist,
+%   2. determining the avoidDistance which gave a [mean distance to closest neighbor] closest to 1
+%   3. fitting a regression model to the above avoidDistances vs numberOfAgents

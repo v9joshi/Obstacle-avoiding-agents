@@ -63,4 +63,8 @@ decisionInput.distanceFromObsLocations = distanceFromObsLocations;
 
 % Use distance and locations to determine unit vectors to the obstacles
 decisionInput.relativeObsUnitVector = [relativeObsLocations(:,1)./distanceFromObsLocations, relativeObsLocations(:,2)./distanceFromObsLocations];
+
+% Use vectors to obstacle and goal to determine goal visibility
+decisionInput.goalVisibility = isGoalVisible(currAgentPosition, decisionInput, params, obstacleLocations);
+
 end
