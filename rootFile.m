@@ -22,7 +22,7 @@ alignDistance = 6; % Distance to other agents where alignment is maximal.
 alignYintercept = 0.6; % Y-intercept of alignment gaussian.
 attractDistance = 7; % Distance to other agents where attraction is maximal.
 obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
-obstacleVisibility = 5; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
+obstacleVisibility = 10; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
 
 % Agent dynamics
 turnRate = 2; % units of radians per second. speed limit
@@ -31,7 +31,7 @@ turnRate = 2; % units of radians per second. speed limit
 destinationSuccessCriterion = 5;
 
 % Simulation parameters
-totalSimulationTime = 200; % How long does the simulation run?
+totalSimulationTime = 100; % How long does the simulation run?
 stepTime = 0.1; % Step time for each loop of the simulation
 
 % What are the initial states of the agents?
@@ -76,8 +76,9 @@ goalLocations = [0, 50];
 % Obstacle parameters
 obstacleLocation = [0, 20];
 obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
-obstacleScale = 10;  % length scale of obstacle
+obstacleScale = 20;  % length scale of obstacle
 arcAngle = pi;       % how many radians should arc obstacles cover?
+gapSize = 6;         % size of gap in the middle of the wall
 
 groupDiameter = numberOfAgents*avoidDistance;
 obstacleSpacing = avoidDistance/20; % Distance between two points on the obstacle
@@ -100,7 +101,7 @@ switch obstacleType
         y1 = obstacleLocation(2);
         x2 = obstacleLocation(1) + obstacleScale/2;
         y2 = obstacleLocation(2);
-        obstacle = obstLine(x1, y1, x2, y2, obstacleSpacing);
+        obstacle = obstLine(x1, y1, x2, y2, obstacleSpacing, gapSize);
     % make concave arc obstacle
     case 3
         arcRadius = obstacleScale/2;
