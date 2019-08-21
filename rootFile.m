@@ -9,40 +9,47 @@
 clc; close all; clear;
 
 %% Define some parameters
+
 % Agent parameters
 numberOfAgents = 10; % How many Agents exist?
+% What are the initial states of the agents?
+initialPositionX = (5+5).*rand(numberOfAgents,1) - 5; % m
+initialPositionY = (5+5).*rand(numberOfAgents,1) - 5; % m
+initialSpeed = 1*ones(numberOfAgents, 1); % m/s
+initialOrientation = zeros(numberOfAgents, 1); % radians
 
+% Animation only params
 agentLength = 1; % The length (head to tail) of each Agents in m. Used only for plotting.
 arrowheadSize = 7; % Size of arrowheads on plotted agents, in pixels.
 
-goalSize = 5; % How large is the goal. This affects visibility and how close the agents have to be to the goal location to succeed
+% How large is the goal. This affects visibility and how close the agents have to be to the goal location to succeed
+goalSize = 5; 
+
+% Model being used
+modelCalovi = 0; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
 
 % Radii for the agents
-modelCalovi = 1; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
-avoidDistance = 1 + 0.15*numberOfAgents; % Closer than that to another agent = repulsion farther = attraction.*
-alignDistance = 6; % Distance to other agents where alignment is maximal.
+avoidDistance = 1 + 0.15*numberOfAgents; %Closer than that to another agent = repulsion farther = attraction.x0.15
+alignDistance = 6; %  Distance to other agents where alignment is maximal.
+attractDistance = 10; % Distance to other agents where attraction is maximal.
+
+% How many neighbors should the agent social dynamics consider?
+numberOfNeighbors = 1;
+
+% Colovi specific params
 alignYintercept = 0.6; % Y-intercept of alignment gaussian.
-attractDistance = 7; % Distance to other agents where attraction is maximal.
 obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
-obstacleVisibility = 10; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
+obstacleVisibility = 50; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
 
 % Agent dynamics
-turnRate = 2; % units of radians per second. speed limit
+turnRate = 2; % units of radians per second. turning speed limit
 
 % How close to the destination do you need to be to have succeeded?
 destinationSuccessCriterion = goalSize;
 
 % Simulation parameters
-totalSimulationTime = 100; % How long does the simulation run?
+totalSimulationTime = 50; % How long does the simulation run?
 stepTime = 0.1; % Step time for each loop of the simulation
-
-% What are the initial states of the agents?
-%initialPositionX = zeros(numberOfAgents, 1); %0.2*(1:1:numberOfAgents)';
-%initialPositionY = 0.5*(1:1:numberOfAgents)'; %zeros(numberOfAgents, 1);
-initialPositionX = (5+5).*rand(numberOfAgents,1) - 5;
-initialPositionY = (5+5).*rand(numberOfAgents,1) - 5;
-initialSpeed = 1*ones(numberOfAgents, 1); % m/s
-initialOrientation = zeros(numberOfAgents, 1); % radians
 
 %% Set up some weights for the agents
 agentWeights.Destination = zeros(numberOfAgents, 1);
@@ -52,7 +59,7 @@ agentWeights.Alignment = zeros(numberOfAgents, 1);
 agentWeights.Obstacle = zeros(numberOfAgents, 1);
 
 % How many agents know the destination?
-fractionInformed = 1;
+fractionInformed = 0.3;
 informedAgents = round(fractionInformed*numberOfAgents);
 listOfInformedAgents = randsample(numberOfAgents, informedAgents);
 listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
@@ -60,9 +67,9 @@ agentWeights.Destination(listOfInformedAgents) = 1;
 
 % How much do agents care about social behavior (alignment, attraction,
 % avoidance)
-agentWeights.Attraction(:) = 1.8;
-agentWeights.Alignment(:) = 1;
-agentWeights.Avoidance(:) = 1;
+agentWeights.Avoidance(:) = 1;%1.8;
+agentWeights.Attraction(:) = 1;%1.8;
+agentWeights.Alignment(:) = 1;%1;
 
 % How much do agents care about obstacle avoidance?
 agentWeights.Obstacle(:) = 5;
@@ -77,14 +84,14 @@ limitsY = [-10, 50];
 goalLocations = [0, 50];
 
 % Obstacle parameters
-obstacleLocation = [0, 20];
-obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
+obstacleLocation = [0,20];
+obstacleType = 2;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
 obstacleScale = 20;  % length scale of obstacle
 arcAngle = pi;       % how many radians should arc obstacles cover?
-gapSize = 6;         % size of gap in the middle of the wall
+gapSize = 0;         % size of gap in the middle of the wall
 
 groupDiameter = numberOfAgents*avoidDistance;
-obstacleSpacing = avoidDistance/20; % Distance between two points on the obstacle
+obstacleSpacing = avoidDistance/30; % Distance between two points on the obstacle
 
 % Make some obstacles
 obstacleX = [];
@@ -150,10 +157,14 @@ initialStates = [initialPositionX; initialPositionY; initialSpeed; initialOrient
 
 % Collect all the parameters
 params.numberOfAgents = numberOfAgents;
+
 params.avoidDistance = avoidDistance;
 params.alignDistance = alignDistance;
-params.alignYintercept = alignYintercept;
 params.attractDistance = attractDistance;
+
+params.numberOfNeighbors = numberOfNeighbors;
+
+params.alignYintercept = alignYintercept;
 params.obstacleDistance = obstacleDistance;
 params.obstacleVisibility = obstacleVisibility;
 
@@ -299,9 +310,9 @@ for currTimeIndex = 1:10:length(timeList)
                agentsYOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
               arrowheadSize, 'color', 'r');
     end
-    
     hold off
     pause(0.01);
+    
 end
 
 % * avoidDistance function determined by:

@@ -5,6 +5,7 @@ function decisionInput = agentPerception(currAgent, stateList, params)
 numberOfAgents = params.numberOfAgents;
 waterSourceLocations = params.waterSourceLocations;
 obstacleLocations = params.obstacleLocations;
+numberOfNeighbors = params.numberOfNeighbors;
 
 % unpack the states of the agents
 agentX = stateList(1:numberOfAgents);
@@ -40,6 +41,19 @@ otherAgentOrientations(~agentVisible, :) = []; % drop agent if obstructed
 relativePositions = otherAgentPositions - repmat(currAgentPosition, size(otherAgentPositions, 1), 1);
 agentDistanceList = sqrt(sum(relativePositions.^2, 2));
 decisionInput.agentDistanceList = agentDistanceList;
+
+% Order agents based on distance, closest first, furthest last
+[~, sortedAgentList] = sort(agentDistanceList); % determine the sorting order
+% Drop agents that aren't within the nearest set of neighbors defined by
+% numberOfNeighbors parameter
+neighborIndices = sortedAgentList(1:min(length(sortedAgentList), numberOfNeighbors));
+
+% Overwrite all the perception variables to contain only neighbors
+agentDistanceList = agentDistanceList(neighborIndices);
+otherAgentPositions = otherAgentPositions(neighborIndices,:);
+otherAgentOrientations = otherAgentOrientations(neighborIndices,:);
+decisionInput.agentDistanceList = agentDistanceList; 
+relativePositions = otherAgentPositions - repmat(currAgentPosition, size(otherAgentPositions, 1), 1);
 
 % Use distance and locations to determine unit vectors to other agents
 decisionInput.relativeAgentOrientation = [relativePositions(:,1)./agentDistanceList, relativePositions(:,2)./agentDistanceList];
