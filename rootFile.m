@@ -11,7 +11,7 @@ clc; close all; clear;
 %% Define some parameters
 
 % Agent parameters
-numberOfAgents = 10; % How many Agents exist?
+numberOfAgents = 15; % How many Agents exist?
 % What are the initial states of the agents?
 initialPositionX = (5+5).*rand(numberOfAgents,1) - 5; % m
 initialPositionY = (5+5).*rand(numberOfAgents,1) - 5; % m
@@ -29,12 +29,12 @@ goalSize = 5;
 modelCalovi = 0; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
 
 % Radii for the agents
-avoidDistance = 1 + 0.15*numberOfAgents; %Closer than that to another agent = repulsion farther = attraction.x0.15
-alignDistance = 6; %  Distance to other agents where alignment is maximal.
+avoidDistance = 1;% + 0.15*numberOfAgents; %Closer than that to another agent = repulsion farther = attraction.x0.15
+alignDistance = 5; %  Distance to other agents where alignment is maximal.
 attractDistance = 10; % Distance to other agents where attraction is maximal.
 
 % How many neighbors should the agent social dynamics consider?
-numberOfNeighbors = 1;
+numberOfNeighbors = 5;
 
 % Colovi specific params
 alignYintercept = 0.6; % Y-intercept of alignment gaussian.
@@ -48,8 +48,8 @@ turnRate = 2; % units of radians per second. turning speed limit
 destinationSuccessCriterion = goalSize;
 
 % Simulation parameters
-totalSimulationTime = 50; % How long does the simulation run?
-stepTime = 0.1; % Step time for each loop of the simulation
+totalSimulationTime = 100; % How long does the simulation run?
+stepTime = 0.01; % Step time for each loop of the simulation
 
 %% Set up some weights for the agents
 agentWeights.Destination = zeros(numberOfAgents, 1);
@@ -59,7 +59,7 @@ agentWeights.Alignment = zeros(numberOfAgents, 1);
 agentWeights.Obstacle = zeros(numberOfAgents, 1);
 
 % How many agents know the destination?
-fractionInformed = 0.3;
+fractionInformed = 1;
 informedAgents = round(fractionInformed*numberOfAgents);
 listOfInformedAgents = randsample(numberOfAgents, informedAgents);
 listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
@@ -69,10 +69,10 @@ agentWeights.Destination(listOfInformedAgents) = 1;
 % avoidance)
 agentWeights.Avoidance(:) = 1;%1.8;
 agentWeights.Attraction(:) = 1;%1.8;
-agentWeights.Alignment(:) = 1;%1;
+agentWeights.Alignment(:) = 10;%1;
 
 % How much do agents care about obstacle avoidance?
-agentWeights.Obstacle(:) = 5;
+agentWeights.Obstacle(:) = 3;
 
 %% Define some environment variables
 
@@ -85,8 +85,8 @@ goalLocations = [0, 50];
 
 % Obstacle parameters
 obstacleLocation = [0,20];
-obstacleType = 2;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
-obstacleScale = 20;  % length scale of obstacle
+obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
+obstacleScale = 15;  % length scale of obstacle
 arcAngle = pi;       % how many radians should arc obstacles cover?
 gapSize = 0;         % size of gap in the middle of the wall
 
@@ -248,6 +248,9 @@ end
 
 % Output number of succesfuly agents
 display([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
+display(['minimum time to goal: ', num2str(min(goalReachTime))]);
+display(['maximum time to goal: ', num2str(max(goalReachTime))]);
+display(['median time to goal: ', num2str(median(goalReachTime,'omitnan'))]);
 
 %% Unpack output states
 agentsXOut = statesList(1:numberOfAgents,:)';
