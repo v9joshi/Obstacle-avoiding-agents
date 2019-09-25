@@ -31,14 +31,18 @@ goalVisibility = decisionInput.goalVisibility;
 
 % Get repulsed by close & attracted by farther away agents
 forcesOfAtt = (agentDistanceList - avoidDistance)./(1+(agentDistanceList/attractDistance).^2);
+forcesOfAtt = forcesOfAtt/(attractDistance - avoidDistance);
 changeInOrientationAttract = relativeAgentOrientation.*[forcesOfAtt, forcesOfAtt];
 
 % Get aligned with Agents
-forcesOfAlign = (alignYintercept + agentDistanceList).^(-(agentDistanceList/alignDistance).^2);
+forcesOfAlign = (alignYintercept + agentDistanceList).*exp(-(agentDistanceList/alignDistance).^2);
+forcesOfAlign = forcesOfAlign/(alignDistance + alignYintercept);
 changeInOrientationAlign = absoluteAgentOrientation.*[forcesOfAlign, forcesOfAlign];
 
 % Get repelled by obstacles. Exponentially more the closer you are
 forcesOfObsRep = (1./distanceFromObsLocations)./obstacleSize;
+forcesOfObsRep = forcesOfObsRep*obstacleDistance;
+
 forcesOfObsRep(distanceFromObsLocations > obstacleVisibility, :) = 0; % No repulsion outside visual range
 forcesOfObsRep(distanceFromObsLocations < obstacleDistance, :) =...
     forcesOfObsRep(distanceFromObsLocations < obstacleDistance, :).*1000; % Avoid very close things a lot
@@ -53,7 +57,6 @@ summedUnitVectors = agentWeights.Attraction(currAgent)*sum(changeInOrientationAt
                     + agentWeights.Alignment(currAgent)*sum(changeInOrientationAlign, 1)...
                     + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1)...
                     - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
-
 
 if sqrt(sum(summedUnitVectors.^2)) == 0
     normalizedSum = [0, 0];
