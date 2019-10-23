@@ -30,8 +30,9 @@
 % The time list, statelist and list of informed agents.
 %   states are X, Y, Speed and Orientation
 % The location of the obstacles
+% If 'verbose' is given as an argument, displays goal reach times
 
-function [goalReachTime, agent, environment] = runAgentSimulation(simParameters, agentParameters, obstacleParameters)    
+function [goalReachTime, agent, environment] = runAgentSimulation(simParameters, agentParameters, obstacleParameters, varargin)    
     % Model being used
     modelCalovi = simParameters(1); % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
 
@@ -250,9 +251,11 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     environment.obstacleLocations = obstacleLocations;
     environment.goalLocations = goalLocations;
     
-    % Output number of succesfuly agents
-    display([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
-    display(['minimum time to goal: ', num2str(min(goalReachTime))]);
-    display(['maximum time to goal: ', num2str(max(goalReachTime))]);
-    display(['median time to goal: ', num2str(median(goalReachTime,'omitnan'))]);
+    % Output number of succesful agents
+    if any(strcmp('verbose',varargin))
+        display([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
+        display(['minimum time to goal: ', num2str(min(goalReachTime))]);
+        display(['maximum time to goal: ', num2str(max(goalReachTime))]);
+        display(['median time to goal: ', num2str(median(goalReachTime,'omitnan'))]);
+    end
 end
