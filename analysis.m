@@ -18,7 +18,7 @@ simParameters = [0 100 0.1]; % Model type, total sim time, stepTime
 agentParameters = [10 5 1, 1 5 10, 1 1 50, 2, 1 8 1 3];
 obstacleParameters = [1 20 pi 0];
 
-%% Static Plot [add plotting envidronment]
+%% Static Plot [add plotting environment]
 agent = agnt{9}; % Enter run number in {}
 
 figure(1)
@@ -38,6 +38,21 @@ title('Agent world')
 axis equal
 axisLimits.X = get(gca, 'xlim');
 axisLimits.Y = get(gca, 'ylim');
+
+%% Plotting all movement figures in panels
+for run = 1:size(agnt,2)
+    subplot(ceil(sqrt(size(agnt,2))),floor(sqrt(size(agnt,2))),run)
+    agent = agnt{run};
+    agentsXOut = agent.statesList(1:agentParameters(1),:)';
+    agentsYOut = agent.statesList(agentParameters(1)+1:agentParameters(1)*2,:)';
+    plot(agentsXOut, agentsYOut);
+    axis equal
+    axisLimits.X = get(gca, 'xlim');
+    axisLimits.Y = get(gca, 'ylim');
+end
+xlabel('Agent x position')
+ylabel('Agent y position')
+title('Agent world')
 
 %% Make permutation matrix [make better] & run simulation over the parameter space
 % Makes matrix of parameter space [make better, full factorial possibility]
