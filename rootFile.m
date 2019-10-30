@@ -12,11 +12,14 @@ clc; close all; clear;
 
 % Agent parameters
 numberOfAgents = 15; % How many Agents exist?
+numberOfAgents = 5; % How many Agents exist?
 % What are the initial states of the agents?
 initialPositionX = (5+5).*rand(numberOfAgents,1) - 5; % m
 initialPositionY = (5+5).*rand(numberOfAgents,1) - 5; % m
+initialPositionY = (5+5).*rand(numberOfAgents,1); % m
 initialSpeed = 1*ones(numberOfAgents, 1); % m/s
 initialOrientation = zeros(numberOfAgents, 1); % radians
+initialOrientation = pi/2*ones(numberOfAgents, 1); % radians
 
 % Animation only params
 agentLength = 1; % The length (head to tail) of each Agents in m. Used only for plotting.
@@ -35,6 +38,7 @@ attractDistance = 10; % Distance to other agents where attraction is maximal.
 
 % How many neighbors should the agent social dynamics consider?
 numberOfNeighbors = 5;
+numberOfNeighbors = inf;
 
 % Colovi specific params
 alignYintercept = 0.6; % Y-intercept of alignment gaussian.
@@ -70,9 +74,11 @@ agentWeights.Destination(listOfInformedAgents) = 1;
 agentWeights.Avoidance(:) = 1;%1.8;
 agentWeights.Attraction(:) = 1;%1.8;
 agentWeights.Alignment(:) = 10;%1;
+agentWeights.Alignment(:) = 5;%1;
 
 % How much do agents care about obstacle avoidance?
 agentWeights.Obstacle(:) = 3;
+agentWeights.Obstacle(:) = 1;
 
 %% Define some environment variables
 
@@ -86,6 +92,7 @@ goalLocations = [0, 50];
 % Obstacle parameters
 obstacleLocation = [0,20];
 obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
+obstacleType = 1;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
 obstacleScale = 15;  % length scale of obstacle
 arcAngle = pi;       % how many radians should arc obstacles cover?
 gapSize = 0;         % size of gap in the middle of the wall
