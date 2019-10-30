@@ -5,10 +5,11 @@
 % c) Interact with other agents so as to move in a group but also not
 % collide with each other.
 
-% simParameters is a 3 parameter vector consisting of 
+% simParameters is a 4 parameter vector consisting of 
 %   1) Model type - 0 Couzin 1 calovi
 %   2) Total simulation time in seconds
 %   3) Step time for the simulation in seconds
+%   4) Step time for the agent update
 
 % agentParameters is a 14 parameter vector consisting of 
 %   1) Number of agents
@@ -72,7 +73,10 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
     % Simulation parameters
     totalSimulationTime = simParameters(2); % How long does the simulation run?
-    stepTime = simParameters(3); % Step time for each loop of the simulation
+    simStepTime = simParameters(3); % Step time for each loop of the simulation
+    agentStepTime = simParameters(4);
+    numStepsPerUpdate = floor(agentStepTime/simStepTime);
+
 
     %% Set up some weights for the agents
     agentWeights.Destination = zeros(numberOfAgents, 1);
@@ -167,7 +171,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     params.obstacleVisibility = obstacleVisibility;
 
     params.turnRate = turnRate;
-    params.stepTime = stepTime;
+    params.stepTime = simStepTime;
 
     params.agentWeights = agentWeights;
     params.waterSourceLocations = goalLocations;
@@ -185,31 +189,33 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
     goalReachTime = NaN(numberOfAgents,1); % time when goal was reached
     destinationReached = zeros(numberOfAgents,1); % flag for reaching the goal
+    
+    % What can we change for the agents?
+    actionInput.desiredSpeed = initialSpeed;
+    actionInput.desiredOrientation = initialOrientation;
+
 
     %% Run the simulation
     while timeList(end) < totalSimulationTime
-        timeList(end+1) =  timeList(end) + stepTime;
 
         % What is the current state?
         statesNow = statesList(:,end);
 
-        % What can we change for the agents?
-        actionInput.desiredSpeed = statesNow(2*numberOfAgents + 1: 3*numberOfAgents);
-        actionInput.desiredOrientation = statesNow(3*numberOfAgents + 1: end);
-
         % Run perception and decision  steps for each agent
-        for currAgent = 1:numberOfAgents
-            % run the perception step and update decision input
-            decisionInput = agentPerception(currAgent, statesNow, params);    
+        if (mod(length(timeList), numStepsPerUpdate) == 0)
+            for currAgent = 1:numberOfAgents
+                % run the perception step and update decision input
+                decisionInput = agentPerception(currAgent, statesNow, params);    
 
-            % run the decision step and update action input
-            if modelCalovi == 1 % Gaussian curves rather than radii
-                actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
-            else % Fixed radii
-                actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
+                % run the decision step and update action input
+                if modelCalovi == 1 % Gaussian curves rather than radii
+                    actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
+                else % Fixed radii
+                    actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
+                end
             end
         end
-
+        
         % If destination was reached, set desired agent speed and current
         % agents speed to 0.1
         actionInput.desiredSpeed(destinationReached == 0 ) = 0.1;
@@ -220,6 +226,9 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
         % add on the states
         statesList = [statesList, statesNow];
+        
+        % update the time
+        timeList(end+1) =  timeList(end) + simStepTime;
 
         % check if destination has been reached for each agent
         agentX = statesNow(1:numberOfAgents);
