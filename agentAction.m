@@ -19,17 +19,10 @@ dAgentX = agentSpeed.*cos(agentOrientation);
 dAgentY = agentSpeed.*sin(agentOrientation);
 dAgentSpeed = zeros(numberOfAgents, 1);
 
-dAgentOrientation = zeros(numberOfAgents, 1);
+agentOrientation = wrapToPi(agentOrientation);
+desiredChangeInOrientation = wrapToPi(desiredOrientation - agentOrientation);
 
-for currAgent = 1:numberOfAgents
-    agentOrientation(currAgent) = wrapToPi(agentOrientation(currAgent));
-    desiredChangeInOrientation = wrapToPi(desiredOrientation(currAgent) - agentOrientation(currAgent));
-    if abs(desiredChangeInOrientation) < turnRate*stepTime
-        dAgentOrientation(currAgent) = desiredChangeInOrientation/stepTime;
-    else
-        dAgentOrientation(currAgent) = turnRate*sign(desiredChangeInOrientation);
-    end
-end
+dAgentOrientation = min(desiredChangeInOrientation/stepTime, turnRate*sign(desiredChangeInOrientation)) ;
 
 % Store and return derivatives
 dStateList = [dAgentX; dAgentY; dAgentSpeed; dAgentOrientation];
