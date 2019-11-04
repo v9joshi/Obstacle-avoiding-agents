@@ -11,14 +11,11 @@ clc; close all; clear;
 %% Define some parameters
 
 % Agent parameters
-numberOfAgents = 15; % How many Agents exist?
 numberOfAgents = 5; % How many Agents exist?
 % What are the initial states of the agents?
 initialPositionX = (5+5).*rand(numberOfAgents,1) - 5; % m
-initialPositionY = (5+5).*rand(numberOfAgents,1) - 5; % m
 initialPositionY = (5+5).*rand(numberOfAgents,1); % m
 initialSpeed = 1*ones(numberOfAgents, 1); % m/s
-initialOrientation = zeros(numberOfAgents, 1); % radians
 initialOrientation = pi/2*ones(numberOfAgents, 1); % radians
 
 % Animation only params
@@ -29,7 +26,7 @@ arrowheadSize = 7; % Size of arrowheads on plotted agents, in pixels.
 goalSize = 5; 
 
 % Model being used
-modelCalovi = 0; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
+modelCalovi = 1; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
 
 % Radii for the agents
 avoidDistance = 1;% + 0.15*numberOfAgents; %Closer than that to another agent = repulsion farther = attraction.x0.15
@@ -37,7 +34,6 @@ alignDistance = 5; %  Distance to other agents where alignment is maximal.
 attractDistance = 10; % Distance to other agents where attraction is maximal.
 
 % How many neighbors should the agent social dynamics consider?
-numberOfNeighbors = 5;
 numberOfNeighbors = inf;
 
 % Colovi specific params
@@ -53,7 +49,11 @@ destinationSuccessCriterion = goalSize;
 
 % Simulation parameters
 totalSimulationTime = 100; % How long does the simulation run?
-stepTime = 0.01; % Step time for each loop of the simulation
+simStepTime = 0.01; % Step time for each loop of the simulation
+
+% How often do agents update decisions
+numStepsPerUpdate = 10;
+agentStepTime = simStepTime*numStepsPerUpdate;
 
 %% Set up some weights for the agents
 agentWeights.Destination = zeros(numberOfAgents, 1);
@@ -73,11 +73,9 @@ agentWeights.Destination(listOfInformedAgents) = 1;
 % avoidance)
 agentWeights.Avoidance(:) = 1;%1.8;
 agentWeights.Attraction(:) = 1;%1.8;
-agentWeights.Alignment(:) = 10;%1;
 agentWeights.Alignment(:) = 5;%1;
 
 % How much do agents care about obstacle avoidance?
-agentWeights.Obstacle(:) = 3;
 agentWeights.Obstacle(:) = 1;
 
 %% Define some environment variables
@@ -91,14 +89,13 @@ goalLocations = [0, 50];
 
 % Obstacle parameters
 obstacleLocation = [0,20];
-obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
 obstacleType = 1;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
 obstacleScale = 15;  % length scale of obstacle
 arcAngle = pi;       % how many radians should arc obstacles cover?
 gapSize = 0;         % size of gap in the middle of the wall
 
 groupDiameter = numberOfAgents*avoidDistance;
-obstacleSpacing = avoidDistance/30; % Distance between two points on the obstacle
+obstacleSpacing = avoidDistance/10; % Distance between two points on the obstacle
 
 % Make some obstacles
 obstacleX = [];
@@ -176,7 +173,7 @@ params.obstacleDistance = obstacleDistance;
 params.obstacleVisibility = obstacleVisibility;
 
 params.turnRate = turnRate;
-params.stepTime = stepTime;
+params.stepTime = simStepTime;
 
 params.agentWeights = agentWeights;
 params.waterSourceLocations = goalLocations;
@@ -197,30 +194,35 @@ numberOfBouts = 0;
 goalReachTime = NaN(numberOfAgents,1); % time when goal was reached
 destinationReached = zeros(numberOfAgents,1); % flag for reaching the goal
 
+% Define these variables
+actionInput.desiredSpeed = initialSpeed;
+actionInput.desiredOrientation = initialOrientation;
+
 %% Run the simulation
 while timeList(end) < totalSimulationTime
-    timeList(end+1) =  timeList(end) + stepTime;
+%     display('step')
     
     % What is the current state?
     statesNow = statesList(:,end);
-    
-    % What can we change for the agents?
-    actionInput.desiredSpeed = statesNow(2*numberOfAgents + 1: 3*numberOfAgents);
-    actionInput.desiredOrientation = statesNow(3*numberOfAgents + 1: end);
+    timeNow = timeList(end);
     
     % Run perception and decision  steps for each agent
-    for currAgent = 1:numberOfAgents
-        % run the perception step and update decision input
-        decisionInput = agentPerception(currAgent, statesNow, params);    
-    
-        % run the decision step and update action input
-        if modelCalovi == 1 % Gaussian curves rather than radii
-            actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
-        else % Fixed radii
-            actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
+    if (mod(length(timeList), numStepsPerUpdate) == 0)
+%         display('update')
+
+        for currAgent = 1:numberOfAgents
+            % run the perception step and update decision input
+            decisionInput = agentPerception(currAgent, statesNow, params);    
+
+            % run the decision step and update action input
+            if modelCalovi == 1 % Gaussian curves rather than radii
+                actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
+            else % Fixed radii
+                actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
+            end
         end
     end
-  
+    
     % If destination was reached, set desired agent speed and current
     % agents speed to 0.1
     actionInput.desiredSpeed(destinationReached == 0 ) = 0.1;
@@ -231,6 +233,9 @@ while timeList(end) < totalSimulationTime
     
     % add on the states
     statesList = [statesList, statesNow];
+    
+    % Increment the time counter
+    timeList(end+1) =  timeList(end) + simStepTime;    
     
     % check if destination has been reached for each agent
     agentX = statesNow(1:numberOfAgents);
@@ -249,8 +254,7 @@ while timeList(end) < totalSimulationTime
     % If all the agents reached the destination, then stop the simulation
     if fractionReached == 1
         break;
-     end
-    
+    end
 end
 
 % Output number of succesfuly agents
@@ -289,7 +293,7 @@ semiAgentSize = agentLength/2;
 
 warning('off','arrow:warnlimits')
 
-for currTimeIndex = 1:10:length(timeList)
+for currTimeIndex = 1:10*numStepsPerUpdate:length(timeList)
     set(0, 'currentfigure',2);
     plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
     hold on
