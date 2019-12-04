@@ -1,10 +1,11 @@
 function [meanSuccessRate] = optimizeAgents(inputs)
 
+    % Initialize the success rate and the number of runs
     successRate = 0;
-    numRuns = 100;
+    numRuns = 300;
     
     % constant sim params
-    simParameters = [0 250 0.01 0.1]; % Model type, total sim time, stepTime
+    simParameters = [1 250 0.01 0.1]; % Model type, total sim time, stepTime
     
     % variable agent weights
     agentParameters = [5 inf 1, 1 5 10, 0.6 1 50, 2, 1 inputs 1 1]; % 1 50 1 1
@@ -12,12 +13,14 @@ function [meanSuccessRate] = optimizeAgents(inputs)
     % Constant obstacle
     obstacleParameters = [3 15 pi 0];   
     
+    % Run the simulation several times
     for run = 1:numRuns %size(agentParamList,1)
         [goalReachTime, ~, ~] = runAgentSimulation(simParameters, agentParameters, obstacleParameters);
     %     grt{run} = goalReachTime;
     %     agnt{run} = agent;
     %     env{run} = environment;
-
+        
+        % Measure the success rate of the agents
         numberOfAgents = agentParameters(1);
         successRate = successRate + sum(~isnan(goalReachTime))/numberOfAgents;
 
@@ -30,7 +33,8 @@ function [meanSuccessRate] = optimizeAgents(inputs)
     %     plot(xList', yList');
     %     axis equal
     end
-
-    meanSuccessRate = -successRate/numRuns;
+    
+    % Calculate the mean success rate across runs
+    meanSuccessRate = successRate/numRuns;
 
 end
