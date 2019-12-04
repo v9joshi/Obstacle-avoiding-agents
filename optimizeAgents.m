@@ -31,6 +31,6 @@ function [meanSuccessRate] = optimizeAgents(inputs)
     %     axis equal
     end
 
-    meanSuccessRate = successRate/numRuns;
+    meanSuccessRate = -successRate/numRuns;
 
 end
