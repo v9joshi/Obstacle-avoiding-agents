@@ -8,10 +8,60 @@
 % Clear and close everything
 clc; close all; clear;
 
-%% Define some parameters
+%% Define sim parameters
+% Model being used
+modelCalovi = 1; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
+% Simulation parameters
+totalSimulationTime = 250; % How long does the simulation run?
+simStepTime = 0.01; % Step time for each loop of the simulation
 
-% Agent parameters
-numberOfAgents = 5; % How many Agents exist?
+% How often do agents update decisions
+numStepsPerUpdate = 10;
+agentStepTime = simStepTime*numStepsPerUpdate;
+
+%% Define agent parameters
+% How many Agents exist?
+numberOfAgents = 20;
+
+% How many neighbors should the agent social dynamics consider?
+numberOfNeighbors = 5;
+
+% How many agents know the destination?
+fractionInformed = 1;
+informedAgents = round(fractionInformed*numberOfAgents);
+listOfInformedAgents = randsample(numberOfAgents, informedAgents);
+listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
+
+% Radii for the agents
+avoidDistance = 1;% + 0.15*numberOfAgents; %Closer than that to another agent = repulsion farther = attraction.x0.15
+alignDistance = 5; %  Distance to other agents where alignment is maximal.
+attractDistance = 10; % Distance to other agents where attraction is maximal.
+
+% Colovi specific params
+alignYintercept = 0.6; % Y-intercept of alignment gaussian.
+obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
+obstacleVisibility = 50; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
+
+% Agent dynamics
+turnRate = 2; % units of radians per second. turning speed limit
+
+% Agent social weights
+avoidWeight = 1;
+alignWeight = 25;
+attractWeight = 1;
+obstacleWeight = 5;
+
+% Obstacle parameters
+obstacleType = 2;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
+obstacleScale = 50;  % length scale of obstacle
+arcAngle = pi;       % how many radians should arc obstacles cover?
+gapSize = 0;         % size of gap in the middle of the wall
+
+obstacleLocation = [0,20]; % The center for the obstacle
+
+% How large is the goal. This affects visibility and how close the agents have to be to the goal location to succeed
+goalSize = 5; 
+
 % What are the initial states of the agents?
 initialPositionX = (5+5).*rand(numberOfAgents,1) - 5; % m
 initialPositionY = (5+5).*rand(numberOfAgents,1); % m
@@ -22,38 +72,8 @@ initialOrientation = pi/2*ones(numberOfAgents, 1); % radians
 agentLength = 1; % The length (head to tail) of each Agents in m. Used only for plotting.
 arrowheadSize = 7; % Size of arrowheads on plotted agents, in pixels.
 
-% How large is the goal. This affects visibility and how close the agents have to be to the goal location to succeed
-goalSize = 5; 
-
-% Model being used
-modelCalovi = 1; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
-
-% Radii for the agents
-avoidDistance = 1;% + 0.15*numberOfAgents; %Closer than that to another agent = repulsion farther = attraction.x0.15
-alignDistance = 5; %  Distance to other agents where alignment is maximal.
-attractDistance = 10; % Distance to other agents where attraction is maximal.
-
-% How many neighbors should the agent social dynamics consider?
-numberOfNeighbors = inf;
-
-% Colovi specific params
-alignYintercept = 0.6; % Y-intercept of alignment gaussian.
-obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
-obstacleVisibility = 50; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
-
-% Agent dynamics
-turnRate = 2; % units of radians per second. turning speed limit
-
 % How close to the destination do you need to be to have succeeded?
 destinationSuccessCriterion = goalSize;
-
-% Simulation parameters
-totalSimulationTime = 100; % How long does the simulation run?
-simStepTime = 0.01; % Step time for each loop of the simulation
-
-% How often do agents update decisions
-numStepsPerUpdate = 10;
-agentStepTime = simStepTime*numStepsPerUpdate;
 
 %% Set up some weights for the agents
 agentWeights.Destination = zeros(numberOfAgents, 1);
@@ -62,21 +82,17 @@ agentWeights.Attraction = zeros(numberOfAgents, 1);
 agentWeights.Alignment = zeros(numberOfAgents, 1);
 agentWeights.Obstacle = zeros(numberOfAgents, 1);
 
-% How many agents know the destination?
-fractionInformed = 1;
-informedAgents = round(fractionInformed*numberOfAgents);
-listOfInformedAgents = randsample(numberOfAgents, informedAgents);
-listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
+% How much do agents care about the destination
 agentWeights.Destination(listOfInformedAgents) = 1;
 
 % How much do agents care about social behavior (alignment, attraction,
 % avoidance)
-agentWeights.Avoidance(:) = 1;%1.8;
-agentWeights.Attraction(:) = 1;%1.8;
-agentWeights.Alignment(:) = 5;%1;
+agentWeights.Avoidance(:) = avoidWeight;%1.8;
+agentWeights.Attraction(:) = attractWeight;%1.8;
+agentWeights.Alignment(:) = alignWeight;%1;
 
 % How much do agents care about obstacle avoidance?
-agentWeights.Obstacle(:) = 1;
+agentWeights.Obstacle(:) = obstacleWeight;
 
 %% Define some environment variables
 
@@ -87,17 +103,10 @@ limitsY = [-10, 50];
 % Global attractors
 goalLocations = [0, 50];
 
-% Obstacle parameters
-obstacleLocation = [0,20];
-obstacleType = 1;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
-obstacleScale = 15;  % length scale of obstacle
-arcAngle = pi;       % how many radians should arc obstacles cover?
-gapSize = 0;         % size of gap in the middle of the wall
-
+% Build the obstacle
 groupDiameter = numberOfAgents*avoidDistance;
 obstacleSpacing = avoidDistance/10; % Distance between two points on the obstacle
 
-% Make some obstacles
 obstacleX = [];
 obstacleY = [];
 
