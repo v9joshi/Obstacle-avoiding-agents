@@ -113,7 +113,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     arcAngle = obstacleParameters(3); % how many radians should arc obstacles cover?
     gapSize = obstacleParameters(4); % size of gap in the middle of the wall
 
-    obstacleSpacing = avoidDistance/10; % Distance between two points on the obstacle
+    obstacleSpacing = obstacleDistance/10; % Distance between two points on the obstacle
 
     % Make some obstacles
     obstacleX = [];
