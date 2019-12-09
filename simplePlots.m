@@ -6,10 +6,15 @@ display(['median time to goal: ', num2str(median(goalReachTime,'omitnan'))]);
 
 
 %% Static Plot [add plotting environment]
+numberOfAgents = agentParameters(1);
 
 figure(1)
-agentsXOut = agent.statesList(1:agentParameters(1),:)';
-agentsYOut = agent.statesList(agentParameters(1)+1:agentParameters(1)*2,:)';
+
+agentsXOut = statesList(1:numberOfAgents,:)';
+agentsYOut = statesList(numberOfAgents + 1: 2*numberOfAgents,:)';
+agentsSpeedOut = statesList(2*numberOfAgents + 1: 3*numberOfAgents,:)';
+agentsOrientationOut = statesList(3*numberOfAgents + 1 :end,:)';
+
 plot(agentsXOut, agentsYOut);
 hold on
 plot(environment.obstacleLocations(:,1), environment.obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
@@ -33,7 +38,6 @@ arrowheadSize = 7;
 semiAgentSize = agentLength/2;
 numStepsPerUpdate = floor(simParameters(4)/simParameters(3));
 timeList = agent.timeList;
-agentsOrientationOut = agent.statesList(agentParameters(1)+1:agentParameters(1)*4,:)';
 
 warning('off','arrow:warnlimits')
 
