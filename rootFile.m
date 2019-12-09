@@ -12,7 +12,7 @@ clc; close all; clear;
 % Model being used
 modelCalovi = 1; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
 % Simulation parameters
-totalSimulationTime = 250; % How long does the simulation run?
+totalSimulationTime = 100; % How long does the simulation run?
 simStepTime = 0.01; % Step time for each loop of the simulation
 
 % How often do agents update decisions
@@ -52,8 +52,8 @@ attractWeight = 1;
 obstacleWeight = 5;
 
 % Obstacle parameters
-obstacleType = 2;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
-obstacleScale = 50;  % length scale of obstacle
+obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
+obstacleScale = 15;  % length scale of obstacle
 arcAngle = pi;       % how many radians should arc obstacles cover?
 gapSize = 0;         % size of gap in the middle of the wall
 
@@ -217,12 +217,10 @@ while timeList(end) < totalSimulationTime
     
     % Run perception and decision  steps for each agent
     if (mod(length(timeList), numStepsPerUpdate) == 0)
-%         display('update')
-
         for currAgent = 1:numberOfAgents
             % run the perception step and update decision input
-            decisionInput = agentPerception(currAgent, statesNow, params);    
-
+            decisionInput = agentPerception2(currAgent, statesNow, params);    
+            
             % run the decision step and update action input
             if modelCalovi == 1 % Gaussian curves rather than radii
                 actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);

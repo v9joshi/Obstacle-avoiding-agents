@@ -113,7 +113,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     arcAngle = obstacleParameters(3); % how many radians should arc obstacles cover?
     gapSize = obstacleParameters(4); % size of gap in the middle of the wall
 
-    obstacleSpacing = avoidDistance/10; % Distance between two points on the obstacle
+    obstacleSpacing = obstacleDistance/10; % Distance between two points on the obstacle
 
     % Make some obstacles
     obstacleX = [];
@@ -205,7 +205,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
         if (mod(length(timeList), numStepsPerUpdate) == 0)
             for currAgent = 1:numberOfAgents
                 % run the perception step and update decision input
-                decisionInput = agentPerception(currAgent, statesNow, params);    
+                decisionInput = agentPerception2(currAgent, statesNow, params);    
 
                 % run the decision step and update action input
                 if modelCalovi == 1 % Gaussian curves rather than radii
