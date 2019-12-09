@@ -53,9 +53,11 @@ function decisionInput = agentPerception2(currAgent, stateList, params)
         decisionInput.goalVisibility(goalNumber) = isAgentVisible2(relativeWSLocations(goalNumber, :), relativeObsLocations, distanceFromWSLocations(goalNumber), distanceFromObsLocations, goalSize);
     end
 
-    % Order agents based on distance, closest first, furthest last, but
-    % only for visible agents
-    [~, sortedAgentList] = sort(agentDistanceList(agentVisible == 1)); % determine the sorting order
+    % Order agents based on distance, closest first, furthest last
+    [~, sortedAgentList] = sort(agentDistanceList); % determine the sorting order
+    
+    % But only for visible agents
+    sortedAgentList = sortedAgentList(agentVisible(sortedAgentList) == 1);
     
     % Drop agents that aren't within the nearest set of neighbors defined by
     % numberOfNeighbors parameter
