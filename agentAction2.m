@@ -19,16 +19,20 @@ dAgentX = agentSpeed.*cos(agentOrientation);
 dAgentY = agentSpeed.*sin(agentOrientation);
 dAgentSpeed = zeros(numberOfAgents, 1);
 
-%agentOrientation = wrapToPi(agentOrientation);
-if abs(agentOrientation) > pi
-    agentOrientation = mod(agentOrientation + pi, 2*pi) - pi;
+desiredChangeInOrientation = 0*agentOrientation;
+
+for currAgent = 1:numberOfAgents
+    if abs(agentOrientation(currAgent)) > pi
+        agentOrientation(currAgent) = mod(agentOrientation(currAgent) + pi, 2*pi) - pi;
+    end
+    
+    desiredChangeInOrientation(currAgent) = desiredOrientation(currAgent) - agentOrientation(currAgent);
+    if (abs(desiredChangeInOrientation(currAgent)) > pi)
+        desiredChangeInOrientation(currAgent) = mod(desiredChangeInOrientation(currAgent) + pi, 2*pi) - pi;
+    end
 end
 
-desiredChangeInOrientation = desiredOrientation - agentOrientation;
 
-if abs(desiredChangeInOrientation) > pi
-    desiredChangeInOrientation = mod(desiredChangeInOrientation + pi, 2*pi) - pi;
-end
 dAgentOrientation = min(desiredChangeInOrientation/stepTime, turnRate*sign(desiredChangeInOrientation)) ;
 
 % Store and return derivatives
