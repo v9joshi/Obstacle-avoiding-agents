@@ -178,6 +178,8 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     params.obstacleLocations = obstacleLocations;
 
     params.agentLength = agentLength;
+    params.obstacleSpacing = obstacleSpacing;
+
     params.goalSize = goalSize;
 
     % Variable initialization
@@ -226,7 +228,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
 
         % add on the states
-        statesList = [statesList, statesNow];
+        statesList(:,end+1) = statesNow;
         
         % update the time
         timeList(end+1) =  timeList(end) + simStepTime;

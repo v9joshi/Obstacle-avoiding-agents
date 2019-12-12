@@ -241,7 +241,7 @@ while timeList(end) < totalSimulationTime
     statesNow = agentAction2(statesNow, params, actionInput);  
     
     % add on the states
-    statesList = [statesList, statesNow];
+    statesList(:, end+1) = statesNow;
     
     % Increment the time counter
     timeList(end+1) =  timeList(end) + simStepTime;    
