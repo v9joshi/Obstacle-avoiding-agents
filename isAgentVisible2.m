@@ -16,5 +16,5 @@ function agentVisibility = isAgentVisible2(observedAgent, obstacles, agentDistan
     agentObstruction = ((-obstacles(:,2)*cwBound(1) + obstacles(:,1)*cwBound(2) < 0) & (-obstacles(:,2)*ccwBound(1) + obstacles(:,1)*ccwBound(2) > 0) & (obstacleDistance < agentDistance));
     
     % Set visibility
-    agentVisibility = ~sum(agentObstruction); % if even one obstruction is active then visibility is 0    
+    agentVisibility = ~max(agentObstruction); % if even one obstruction is active then visibility is 0    
 end

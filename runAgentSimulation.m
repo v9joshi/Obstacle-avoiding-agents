@@ -205,7 +205,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
         if (mod(length(timeList), numStepsPerUpdate) == 0)
             for currAgent = 1:numberOfAgents
                 % run the perception step and update decision input
-                decisionInput = agentPerception2(currAgent, statesNow, params);    
+                decisionInput = agentPerception3(currAgent, statesNow, params);    
 
                 % run the decision step and update action input
                 if modelCalovi == 1 % Gaussian curves rather than radii

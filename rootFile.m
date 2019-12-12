@@ -105,7 +105,7 @@ goalLocations = [0, 50];
 
 % Build the obstacle
 groupDiameter = numberOfAgents*avoidDistance;
-obstacleSpacing = avoidDistance/10; % Distance between two points on the obstacle
+obstacleSpacing = obstacleDistance/10; % Distance between two points on the obstacle
 
 obstacleX = [];
 obstacleY = [];
@@ -191,6 +191,8 @@ params.obstacleLocations = obstacleLocations;
 params.agentLength = agentLength;
 params.goalSize = goalSize;
 
+params.obstacleSpacing = obstacleSpacing;
+
 % Variable initialization
 startTime = 0;
 statesList = initialStates;
@@ -219,7 +221,7 @@ while timeList(end) < totalSimulationTime
     if (mod(length(timeList), numStepsPerUpdate) == 0)
         for currAgent = 1:numberOfAgents
             % run the perception step and update decision input
-            decisionInput = agentPerception2(currAgent, statesNow, params);    
+            decisionInput = agentPerception3(currAgent, statesNow, params);
             
             % run the decision step and update action input
             if modelCalovi == 1 % Gaussian curves rather than radii
