@@ -47,7 +47,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     initialOrientation = (pi/2)+zeros(numberOfAgents, 1); % radians
 
     % Animation only params
-    agentLength = 1; % The length (head to tail) of each Agents in m. Used only for plotting.
+    agentLength = 1; % The length (head to tail) of each Agents in m.
     
     % How large is the goal. This affects visibility and how close the agents have to be to the goal location to succeed
     goalSize = 5; 
