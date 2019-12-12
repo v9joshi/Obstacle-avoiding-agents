@@ -48,9 +48,8 @@ function decisionInput = agentPerception3(currAgent, stateList, params)
     end
 
     % Use vectors to obstacle and goal to determine goal visibility
-    goalSize = params.goalSize;
     for goalNumber = 1:size(waterSourceLocations, 1)
-        decisionInput.goalVisibility(goalNumber) = isAgentVisible3(relativeWSLocations(goalNumber, :), relativeObsLocations, distanceFromWSLocations(goalNumber), distanceFromObsLocations, goalSize);
+        decisionInput.goalVisibility(goalNumber) = isAgentVisible3(relativeWSLocations(goalNumber, :), relativeObsLocations, distanceFromWSLocations(goalNumber), distanceFromObsLocations, obstacleSpacing);
     end
 
     % Order agents based on distance, closest first, furthest last

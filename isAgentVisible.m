@@ -21,5 +21,5 @@ function agentVisibility = isAgentVisible(observingAgent, observedAgent, obstacl
     agentObstruction((abs(relativeObstacleAngle - relativeAgentAngle) < angularRange) & (obstacleDistance < agentDistance)) = 1;
     
     % Set visibility
-    agentVisibility = ~max(agentObstruction); % if even one obstruction is active then visibility is 0    
+    agentVisibility = ~any(agentObstruction); % if even one obstruction is active then visibility is 0    
 end

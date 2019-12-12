@@ -113,7 +113,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     arcAngle = obstacleParameters(3); % how many radians should arc obstacles cover?
     gapSize = obstacleParameters(4); % size of gap in the middle of the wall
 
-    obstacleSpacing = obstacleDistance/10; % Distance between two points on the obstacle
+    obstacleSpacing = obstacleDistance/20; % Distance between two points on the obstacle
 
     % Make some obstacles
     obstacleX = [];
@@ -224,8 +224,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
         statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
 
         % run the action step for all the agents and update the state list
-        statesNow = agentAction2(statesNow, params, actionInput);  
-
+        statesNow = agentAction2(statesNow, params, actionInput);
 
         % add on the states
         statesList(:,end+1) = statesNow;

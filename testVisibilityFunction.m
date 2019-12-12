@@ -2,7 +2,7 @@
 clc; clear all; close all;
 
 % Step 1. Pick an observing agent
-observingAgent = [-5, 20];
+observingAgent = [0, 16.1];
 
 % Step 2. Make an obstacle
 obstacleType = 1;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
@@ -60,7 +60,7 @@ obstacleLocations = [obstacleLocations(:,1) - observingAgent(1), obstacleLocatio
 
 % Step 4. Loop through the entire region and determine visibility
 %         green mark for visible, red mark for not visible
-listR = linspace(0, 10, 1000);
+listR = linspace(0, 20, 100);
 listTheta = linspace(0,2*pi, 1000);
 
 obstacleDistance = sqrt(obstacleLocations(:, 1).^2 + obstacleLocations(:, 2).^2);
