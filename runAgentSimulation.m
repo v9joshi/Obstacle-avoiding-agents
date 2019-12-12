@@ -222,7 +222,8 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
         statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
 
         % run the action step for all the agents and update the state list
-        statesNow = agentAction(statesNow, params, actionInput);  
+        statesNow = agentAction2(statesNow, params, actionInput);  
+
 
         % add on the states
         statesList = [statesList, statesNow];
