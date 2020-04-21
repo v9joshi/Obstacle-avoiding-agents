@@ -2,10 +2,8 @@
 close all;
 % Define some agents
 agentDistance = 0:0.01:30;
-absoluteAgentAngle = pi/2;
-absoluteAgentOrientation = [cos(absoluteAgentAngle); sin(absoluteAgentAngle)];
-relativeAgentAngle = pi/2;
-relativeAgentOrientation = [cos(relativeAgentAngle); sin(relativeAgentAngle)];
+absoluteAgentOrientation = pi;
+relativeAgentOrientation = pi;
 
 % What are the constants being used
 avoidDistance = 5;
@@ -22,18 +20,7 @@ attractionCouzin(agentDistance < avoidDistance) = -1;
 
 alignmentCouzin = zeros(length(agentDistance),1);
 alignmentCouzin(agentDistance <= alignDistance & agentDistance >= avoidDistance) = 1;
-
-for currDist = 1:length(agentDistance)
-    summedUnitVectors = attractionCouzin(currDist)*relativeAgentOrientation + alignmentCouzin(currDist)*absoluteAgentOrientation;
-
-    if sqrt(sum(summedUnitVectors.^2)) == 0
-        normalizedSum = [0, 0];
-    else
-        normalizedSum = summedUnitVectors/sqrt(sum(summedUnitVectors.^2));
-    end
-
-    changeInOrientationCouzin(currDist) = atan2(normalizedSum(2), normalizedSum(1));
-end
+changeInOrientationCouzin = 0.5*(attractionCouzin.*relativeAgentOrientation + alignmentCouzin.*absoluteAgentOrientation);
 
 % Calovi non-linear model
 attractionCalovi = (agentDistance - avoidDistance)./(1+(agentDistance/attractDistance).^2);
@@ -41,18 +28,7 @@ attractionCalovi = attractionCalovi/(attractDistance - avoidDistance);
 
 alignmentCalovi = (alignYintercept + agentDistance).*exp(-(agentDistance/alignDistance).^2);
 alignmentCalovi = alignmentCalovi/(alignDistance + alignYintercept);
-
-for currDist = 1:length(agentDistance)
-    summedUnitVectors = attractionCalovi(currDist)*relativeAgentOrientation + alignmentCalovi(currDist)*absoluteAgentOrientation;
-
-    if sqrt(sum(summedUnitVectors.^2)) == 0
-        normalizedSum = [0, 0];
-    else
-        normalizedSum = summedUnitVectors/sqrt(sum(summedUnitVectors.^2));
-    end
-
-    changeInOrientationCalovi(currDist) = atan2(normalizedSum(2), normalizedSum(1));
-end
+changeInOrientationCalovi = 0.5*(relativeAgentOrientation.*attractionCalovi + absoluteAgentOrientation.*alignmentCalovi);
 
 % plot these
 figure(1)
@@ -66,9 +42,9 @@ xlim([-30,30])
 ylim([-30,30])
 arrow([0 - 0.5*agentLength, 0], [ 0 + 0.5*agentLength, 0], arrowheadSize, 'color', 'k');
 hold on
-otherAgentCenter = testDistance'.*relativeAgentOrientation';
-arrow([otherAgentCenter(:,1) - 0.5*agentLength*absoluteAgentOrientation(1), otherAgentCenter(:,2) - 0.5*agentLength*absoluteAgentOrientation(2)],...
-      [otherAgentCenter(:,1) + 0.5*agentLength*absoluteAgentOrientation(1), otherAgentCenter(:,2) + 0.5*agentLength*absoluteAgentOrientation(2)],...
+otherAgentCenter = testDistance'.*[cos(relativeAgentOrientation), sin(relativeAgentOrientation)];
+arrow([otherAgentCenter(:,1) - 0.5*agentLength*cos(absoluteAgentOrientation), otherAgentCenter(:,2) - 0.5*agentLength*sin(absoluteAgentOrientation)],...
+      [otherAgentCenter(:,1) + 0.5*agentLength*cos(absoluteAgentOrientation), otherAgentCenter(:,2) + 0.5*agentLength*sin(absoluteAgentOrientation)],...
       arrowheadSize, 'color', 'r');
 
 title('Agent placement')
