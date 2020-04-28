@@ -12,11 +12,11 @@ clc; close all; clear;
 % Model being used
 modelCalovi = 1; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
 % Simulation parameters
-totalSimulationTime = 100; % How long does the simulation run?
+totalSimulationTime = 300; % How long does the simulation run?
 simStepTime = 0.01; % Step time for each loop of the simulation
 
 % How often do agents update decisions
-numStepsPerUpdate = 10;
+numStepsPerUpdate = 50;
 agentStepTime = simStepTime*numStepsPerUpdate;
 
 %% Define agent parameters
@@ -24,10 +24,10 @@ agentStepTime = simStepTime*numStepsPerUpdate;
 numberOfAgents = 20;
 
 % How many neighbors should the agent social dynamics consider?
-numberOfNeighbors = 5;
+numberOfNeighbors = inf;
 
 % How many agents know the destination?
-fractionInformed = 1;
+fractionInformed = 0.5;
 informedAgents = round(fractionInformed*numberOfAgents);
 listOfInformedAgents = randsample(numberOfAgents, informedAgents);
 listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
@@ -40,14 +40,14 @@ attractDistance = 10; % Distance to other agents where attraction is maximal.
 % Colovi specific params
 alignYintercept = 0.6; % Y-intercept of alignment gaussian.
 obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
-obstacleVisibility = 50; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
+obstacleVisibility = 1; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
 
 % Agent dynamics
 turnRate = 2; % units of radians per second. turning speed limit
 
 % Agent social weights
 avoidWeight = 1;
-alignWeight = 25;
+alignWeight = 36;
 attractWeight = 1;
 obstacleWeight = 5;
 

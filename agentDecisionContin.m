@@ -29,34 +29,54 @@ relativeWSUnitVector = decisionInput.relativeWSUnitVector;
 relativeObsUnitVector = decisionInput.relativeObsUnitVector;
 goalVisibility = decisionInput.goalVisibility;
 
-% Get repulsed by close & attracted by farther away agents
-forcesOfAtt = (agentDistanceList - avoidDistance)./(1+(agentDistanceList/attractDistance).^2);
-forcesOfAtt = forcesOfAtt/(attractDistance - avoidDistance);
-changeInOrientationAttract = relativeAgentOrientation.*[forcesOfAtt, forcesOfAtt];
 
-% Get aligned with Agents
-forcesOfAlign = (alignYintercept + agentDistanceList).*exp(-(agentDistanceList/alignDistance).^2);
-forcesOfAlign = forcesOfAlign/(alignDistance + alignYintercept);
-changeInOrientationAlign = absoluteAgentOrientation.*[forcesOfAlign, forcesOfAlign];
+if params.numberOfAgents == 1
+    % Get repelled by obstacles. Exponentially more the closer you are
+    forcesOfObsRep = (1./distanceFromObsLocations)./obstacleSize;
+    forcesOfObsRep = forcesOfObsRep*obstacleDistance;
 
-% Get repelled by obstacles. Exponentially more the closer you are
-forcesOfObsRep = (1./distanceFromObsLocations)./obstacleSize;
-forcesOfObsRep = forcesOfObsRep*obstacleDistance;
+    forcesOfObsRep(distanceFromObsLocations > obstacleVisibility, :) = 0; % No repulsion outside visual range
+    forcesOfObsRep(distanceFromObsLocations < obstacleDistance, :) =...
+        forcesOfObsRep(distanceFromObsLocations < obstacleDistance, :).*1000; % Avoid very close things a lot
+    relativeObsUnitVector = relativeObsUnitVector.*[forcesOfObsRep, forcesOfObsRep];
 
-forcesOfObsRep(distanceFromObsLocations > obstacleVisibility, :) = 0; % No repulsion outside visual range
-forcesOfObsRep(distanceFromObsLocations < obstacleDistance, :) =...
-    forcesOfObsRep(distanceFromObsLocations < obstacleDistance, :).*1000; % Avoid very close things a lot
-relativeObsUnitVector = relativeObsUnitVector.*[forcesOfObsRep, forcesOfObsRep];
+    if goalVisibility == 1
+        relativeObsUnitVector = 0;
+    end
+    
+    % Sum all the agent behaviors
+    summedUnitVectors =  agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1)...
+                        - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
+else
+    % Get repulsed by close & attracted by farther away agents
+    forcesOfAtt = (agentDistanceList - avoidDistance)./(1+(agentDistanceList/attractDistance).^2);
+    forcesOfAtt = forcesOfAtt/(attractDistance - avoidDistance);
+    changeInOrientationAttract = relativeAgentOrientation.*[forcesOfAtt, forcesOfAtt];
 
-if goalVisibility == 1
-    relativeObsUnitVector = 0;
+    % Get aligned with Agents
+    forcesOfAlign = (alignYintercept + agentDistanceList).*exp(-(agentDistanceList/alignDistance).^2);
+    forcesOfAlign = forcesOfAlign/(alignDistance + alignYintercept);
+    changeInOrientationAlign = absoluteAgentOrientation.*[forcesOfAlign, forcesOfAlign];
+
+    % Get repelled by obstacles. Exponentially more the closer you are
+    forcesOfObsRep = (1./distanceFromObsLocations)./obstacleSize;
+    forcesOfObsRep = forcesOfObsRep*obstacleDistance;
+
+    forcesOfObsRep(distanceFromObsLocations > obstacleVisibility, :) = 0; % No repulsion outside visual range
+    forcesOfObsRep(distanceFromObsLocations < obstacleDistance, :) =...
+        forcesOfObsRep(distanceFromObsLocations < obstacleDistance, :).*1000; % Avoid very close things a lot
+    relativeObsUnitVector = relativeObsUnitVector.*[forcesOfObsRep, forcesOfObsRep];
+
+    if goalVisibility == 1
+        relativeObsUnitVector = 0;
+    end
+
+    % Add the unit vectors together and then determine the orientation
+    summedUnitVectors = agentWeights.Attraction(currAgent)*sum(changeInOrientationAttract, 1)...
+                        + agentWeights.Alignment(currAgent)*sum(changeInOrientationAlign, 1)...
+                        + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1)...
+                        - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
 end
-
-% Add the unit vectors together and then determine the orientation
-summedUnitVectors = agentWeights.Attraction(currAgent)*sum(changeInOrientationAttract, 1)...
-                    + agentWeights.Alignment(currAgent)*sum(changeInOrientationAlign, 1)...
-                    + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1)...
-                    - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
 
 if sqrt(sum(summedUnitVectors.^2)) == 0
     normalizedSum = [0, 0];
