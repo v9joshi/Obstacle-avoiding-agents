@@ -10,24 +10,28 @@ clc; close all; clear;
 
 %% Define sim parameters
 % Model being used
-modelCalovi = 1; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
+modelCalovi = 0; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
 % Simulation parameters
 totalSimulationTime = 300; % How long does the simulation run?
 simStepTime = 0.01; % Step time for each loop of the simulation
 
-% How often do agents update decisions
-numStepsPerUpdate = 50;
-agentStepTime = simStepTime*numStepsPerUpdate;
-
 %% Define agent parameters
 % How many Agents exist?
-numberOfAgents = 20;
+numberOfAgents = 10;
+
+% How often do agents update decisions
+numStepsPerUpdate = 10*ones(numberOfAgents,1);
+%agentStepTime = simStepTime*numStepsPerUpdate;
+
+if modelCalovi == 1
+   numStepsPerUpdate = round(numStepsPerUpdate + (2*rand(numberOfAgents,1) - 1)*0.1.*numStepsPerUpdate);
+end
 
 % How many neighbors should the agent social dynamics consider?
-numberOfNeighbors = inf;
+numberOfNeighbors = 7;
 
 % How many agents know the destination?
-fractionInformed = 0.5;
+fractionInformed = 1;
 informedAgents = round(fractionInformed*numberOfAgents);
 listOfInformedAgents = randsample(numberOfAgents, informedAgents);
 listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
@@ -46,10 +50,10 @@ obstacleVisibility = 1; % Obstacle visibility: Higher = Obs. avoidance 'starts' 
 turnRate = 2; % units of radians per second. turning speed limit
 
 % Agent social weights
-avoidWeight = 1;
-alignWeight = 36;
-attractWeight = 1;
-obstacleWeight = 5;
+avoidWeight = 0.5;
+alignWeight = 7;
+attractWeight = 0.5;
+obstacleWeight = 2;
 
 % Obstacle parameters
 obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
@@ -57,7 +61,7 @@ obstacleScale = 15;  % length scale of obstacle
 arcAngle = pi;       % how many radians should arc obstacles cover?
 gapSize = 0;         % size of gap in the middle of the wall
 
-obstacleLocation = [0,20]; % The center for the obstacle
+obstacleLocation = [0,15]; % The center for the obstacle
 
 % How large is the goal. This affects visibility and how close the agents have to be to the goal location to succeed
 goalSize = 5; 
@@ -218,8 +222,8 @@ while timeList(end) < totalSimulationTime
     timeNow = timeList(end);
     
     % Run perception and decision  steps for each agent
-    if (mod(length(timeList), numStepsPerUpdate) == 0)
-        for currAgent = 1:numberOfAgents
+    for currAgent = 1:numberOfAgents
+       if (mod(length(timeList), numStepsPerUpdate(currAgent)) == 0)
             % run the perception step and update decision input
             decisionInput = agentPerception3(currAgent, statesNow, params);
             

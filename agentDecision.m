@@ -29,7 +29,7 @@ changeInOrientationAvoid(agentDistanceList > avoidDistance, :) = [];
 
 % Get attracted to Agents that are close but not very close
 changeInOrientationAttract = relativeAgentOrientation;
-changeInOrientationAttract(avoidDistance > agentDistanceList | agentDistanceList > attractDistance, :) = [];
+changeInOrientationAttract(alignDistance > agentDistanceList | agentDistanceList > attractDistance, :) = [];
 
 % Get aligned with Agents that are close but not very close
 changeInOrientationAlign = absoluteAgentOrientation;
@@ -55,7 +55,7 @@ else
                             + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1);
     elseif isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the water source
         summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationAvoid, 1)...
-                        + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1);
+                            + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1);
     else % if you're near an obstacle forget all about the destination
         summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationAvoid, 1)...
                             - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);

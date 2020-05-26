@@ -4,6 +4,7 @@
 function actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput)
 
 % unpack required params
+numberOfAgents = params.numberOfAgents;
 avoidDistance = params.avoidDistance;
 attractDistance = params.attractDistance;
 alignDistance = params.alignDistance;
@@ -18,7 +19,7 @@ agentWeights = params.agentWeights;
 % agentX = stateList(1:numberOfAgents);
 % agentY = stateList(numberOfAgents + 1: 2*numberOfAgents);
 % agentSpeed = stateList(2*numberOfAgents + 1: 3*numberOfAgents);
-% agentOrientation = stateList(3*numberOfAgents + 1:end);
+% currAgentOrientation = stateList(3*numberOfAgents + currAgent);
 
 % unpack the decision input variable
 agentDistanceList = decisionInput.agentDistanceList;
@@ -40,9 +41,9 @@ if params.numberOfAgents == 1
         forcesOfObsRep(distanceFromObsLocations < obstacleDistance, :).*1000; % Avoid very close things a lot
     relativeObsUnitVector = relativeObsUnitVector.*[forcesOfObsRep, forcesOfObsRep];
 
-    if goalVisibility == 1
-        relativeObsUnitVector = 0;
-    end
+%     if goalVisibility == 1
+%         relativeObsUnitVector = 0;
+%     end
     
     % Sum all the agent behaviors
     summedUnitVectors =  agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1)...
@@ -67,9 +68,9 @@ else
         forcesOfObsRep(distanceFromObsLocations < obstacleDistance, :).*1000; % Avoid very close things a lot
     relativeObsUnitVector = relativeObsUnitVector.*[forcesOfObsRep, forcesOfObsRep];
 
-    if goalVisibility == 1
-        relativeObsUnitVector = 0;
-    end
+%     if goalVisibility == 1
+%         relativeObsUnitVector = 0;
+%     end
 
     % Add the unit vectors together and then determine the orientation
     summedUnitVectors = agentWeights.Attraction(currAgent)*sum(changeInOrientationAttract, 1)...
