@@ -3,23 +3,32 @@ close all;
 % Define some agents
 agentDistance = 0:0.01:30;
 
+% Where is this agent looking?
+agentAngle = pi + 0.01;
+agentOrientation = [cos(agentAngle); sin(agentAngle)];
+
+% What is the goal orientation?
+goalAngle = pi/2;
+goalOrientation = [cos(goalAngle); sin(goalAngle)];
+
 % Where is the other agent looking? (alignment)
 absoluteAgentAngle = pi/2;
 absoluteAgentOrientation = [cos(absoluteAgentAngle); sin(absoluteAgentAngle)];
 
 % Where is the other agent located in space relative to this agent? (attraction/repulsion)
-relativeAgentAngle = pi/2;
+relativeAgentAngle = 0;
 relativeAgentOrientation = [cos(relativeAgentAngle); sin(relativeAgentAngle)];
 
 % What are the constants being used
 avoidDistance = 5;
-alignDistance = 5;
-attractDistance = 10;
+alignDistance = 10;
+attractDistance = 20;
 alignYintercept = 0.6;
 
 agentWeights.Avoidance = 1;
 agentWeights.Attraction = 1;
-agentWeights.Alignment = 1;%36.3;
+agentWeights.Alignment = 1;
+agentWeights.Destination = 1;
 
 % How does attraction change?
 % Couzin on off switch
@@ -31,8 +40,10 @@ attractionCouzin(agentDistance < avoidDistance) = -1*agentWeights.Avoidance;
 alignmentCouzin = zeros(length(agentDistance),1);
 alignmentCouzin(agentDistance <= alignDistance & agentDistance >= avoidDistance) = agentWeights.Alignment;
 
+destinationCouzin = agentWeights.Destination;
+
 for currDist = 1:length(agentDistance)
-    summedUnitVectors = attractionCouzin(currDist)*relativeAgentOrientation + alignmentCouzin(currDist)*absoluteAgentOrientation;
+    summedUnitVectors = attractionCouzin(currDist)*relativeAgentOrientation + alignmentCouzin(currDist)*absoluteAgentOrientation + destinationCouzin*goalOrientation;
 
     if sqrt(sum(summedUnitVectors.^2)) == 0
         normalizedSum = [0, 0];
@@ -40,7 +51,7 @@ for currDist = 1:length(agentDistance)
         normalizedSum = summedUnitVectors/sqrt(sum(summedUnitVectors.^2));
     end
 
-    changeInOrientationCouzin(currDist) = atan2(normalizedSum(2), normalizedSum(1));
+    desiredOrientationCouzin(currDist) = atan2(normalizedSum(2), normalizedSum(1));
 end
 
 % Calovi non-linear model
@@ -50,8 +61,10 @@ attractionCalovi = agentWeights.Attraction*attractionCalovi;%(attractDistance - 
 alignmentCalovi = (alignYintercept + agentDistance).*exp(-(agentDistance/alignDistance).^2);
 alignmentCalovi = agentWeights.Alignment*alignmentCalovi;%/(alignDistance + alignYintercept);
 
+destinationCalovi =  agentWeights.Destination;
+
 for currDist = 1:length(agentDistance)
-    summedUnitVectors = attractionCalovi(currDist)*relativeAgentOrientation + alignmentCalovi(currDist)*absoluteAgentOrientation;
+    summedUnitVectors = attractionCalovi(currDist)*relativeAgentOrientation + alignmentCalovi(currDist)*absoluteAgentOrientation + destinationCalovi*goalOrientation;
 
     if sqrt(sum(summedUnitVectors.^2)) == 0
         normalizedSum = [0, 0];
@@ -59,8 +72,21 @@ for currDist = 1:length(agentDistance)
         normalizedSum = summedUnitVectors/sqrt(sum(summedUnitVectors.^2));
     end
 
-    changeInOrientationCalovi(currDist) = atan2(normalizedSum(2), normalizedSum(1));
+    desiredOrientationCalovi(currDist) = atan2(normalizedSum(2), normalizedSum(1));
 end
+
+changeInOrientationCouzin = 0*agentAngle;
+changeInOrientationCalovi = 0*agentAngle;
+
+if abs(agentAngle) > pi
+    agentAngle = mod(agentAngle + pi, 2*pi) - pi;
+end
+    
+desiredChangeCouzin = desiredOrientationCouzin - agentAngle;
+desiredChangeCalovi = desiredOrientationCalovi - agentAngle;
+
+desiredChangeCouzin(abs(desiredChangeCouzin) > pi) = mod(desiredChangeCouzin(abs(desiredChangeCouzin) > pi) + pi, 2*pi) - pi;
+desiredChangeCalovi(abs(desiredChangeCalovi) > pi) = mod(desiredChangeCalovi(abs(desiredChangeCalovi) > pi) + pi, 2*pi) - pi;
 
 % plot these
 figure(1)
@@ -71,7 +97,9 @@ arrowheadSize = 5;
 plot(0,0)
 xlim([-30,30])
 ylim([-30,30])
-arrow([0 - 0.5*agentLength, 0], [ 0 + 0.5*agentLength, 0], arrowheadSize, 'color', 'k');
+arrow([0 - 0.5*agentLength*agentOrientation(1), 0 - 0.5*agentLength*agentOrientation(2)],...
+      [0 + 0.5*agentLength*agentOrientation(1), 0 + 0.5*agentLength*agentOrientation(2)],...
+      arrowheadSize, 'color', 'k');
 hold on
 
 otherAgentCenter = testDistance'.*relativeAgentOrientation';
@@ -79,21 +107,24 @@ arrow([otherAgentCenter(:,1) - 0.5*agentLength*absoluteAgentOrientation(1), othe
       [otherAgentCenter(:,1) + 0.5*agentLength*absoluteAgentOrientation(1), otherAgentCenter(:,2) + 0.5*agentLength*absoluteAgentOrientation(2)],...
       arrowheadSize, 'color', 'r');
 
+plot(0 + 30*cos(goalAngle), 0 + 30*sin(goalAngle), 'bo','markerfacecolor','b')
+  
 title('Agent placement')
+
 subplot(1,2,2)
-plot(agentDistance,changeInOrientationCouzin*180/pi, 'k');
+plot(agentDistance,desiredChangeCouzin*180/pi, 'k','linewidth',4);
 hold on
-plot(agentDistance,changeInOrientationCalovi*180/pi, 'r');
+plot(agentDistance,desiredChangeCalovi*180/pi, 'r','linewidth',2);
 xlimitVal = get(gca, 'xlim');
 ylimitVal = get(gca, 'ylim');
-line([avoidDistance, avoidDistance],ylimitVal ,'color','k','linestyle','--','linewidth',3);
+line([avoidDistance, avoidDistance],ylimitVal ,'color',[0.8,0.8,0.8],'linestyle','--','linewidth',3);
 text(avoidDistance + 0.2, -5, 'avoid distance')
-line([alignDistance, alignDistance], ylimitVal,'color','k','linestyle','--','linewidth',3);
+line([alignDistance, alignDistance], ylimitVal,'color',[0.8,0.8,0.8],'linestyle','--','linewidth',3);
 text(alignDistance+ 0.2, -5, 'align distance')
-line([attractDistance, attractDistance], ylimitVal, 'color','k','linestyle','--','linewidth',3);
+line([attractDistance, attractDistance], ylimitVal, 'color',[0.8,0.8,0.8],'linestyle','--','linewidth',3);
 text(attractDistance+ 0.2, -5, 'attract distance')
 xlim(xlimitVal);
 ylim(ylimitVal);
-ylabel(['Desired new orientation (', char(176) ,')'])
+ylabel(['Desired change in orientation (', char(176) ,')'])
 xlabel('Distance from other agent')
 title('Agent desired orientation')
