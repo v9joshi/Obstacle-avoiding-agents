@@ -27,13 +27,14 @@ for currAgent = 1:numberOfAgents
     end
     
     desiredChangeInOrientation(currAgent) = desiredOrientation(currAgent) - agentOrientation(currAgent);
+    
     if (abs(desiredChangeInOrientation(currAgent)) > pi)
         desiredChangeInOrientation(currAgent) = mod(desiredChangeInOrientation(currAgent) + pi, 2*pi) - pi;
     end
 end
 
 
-dAgentOrientation = min(desiredChangeInOrientation/stepTime, turnRate*sign(desiredChangeInOrientation)) ;
+dAgentOrientation = min(abs(desiredChangeInOrientation)/stepTime, turnRate).*sign(desiredChangeInOrientation);
 
 % Store and return derivatives
 dStateList = [dAgentX; dAgentY; dAgentSpeed; dAgentOrientation];
