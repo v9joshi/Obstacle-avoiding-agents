@@ -1,5 +1,5 @@
 % This program simulates multiple agents interacting with each other and
-% the environment. The agents have inidivual behaviour designed to 
+% the environment. The agents have individual behaviour designed to 
 % a) Move towards a goal.
 % b) Avoid obstacles in the way.
 % c) Interact with other agents so as to move in a group but also not
@@ -10,7 +10,7 @@ clc; close all; clear;
 
 %% Define sim parameters
 % Model being used
-modelCalovi = 0; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
+modelCalovi = 2; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii; 2 = burst-and-coast modification of 1
 % Simulation parameters
 totalSimulationTime = 300; % How long does the simulation run?
 simStepTime = 0.01; % Step time for each loop of the simulation
@@ -23,8 +23,16 @@ numberOfAgents = 10;
 numStepsPerUpdate = 10*ones(numberOfAgents,1);
 %agentStepTime = simStepTime*numStepsPerUpdate;
 
+burstTimeMean = 0.514;
+burstTimeStd = 0.12;
+% distribution of times (in seconds) between agent bursts in the burst-and-coast model
+
 if modelCalovi == 1
    numStepsPerUpdate = round(numStepsPerUpdate + (2*rand(numberOfAgents,1) - 1)*0.1.*numStepsPerUpdate);
+end
+if modelCalovi == 2
+   numStepsPerUpdate = round((burstTimeMean + burstTimeStd*randn(numberOfAgents,1))/simStepTime);
+   % This will be treated as a list of time step numbers at which the agents will update with a new kick
 end
 
 % How many neighbors should the agent social dynamics consider?
@@ -47,7 +55,8 @@ obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
 obstacleVisibility = 1; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
 
 % Agent dynamics
-turnRate = 2; % units of radians per second. turning speed limit
+turnRate = 2; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
+agentSpeed = 5;
 
 % Agent social weights
 avoidWeight = 0.5;
@@ -69,7 +78,7 @@ goalSize = 5;
 % What are the initial states of the agents?
 initialPositionX = (5+5).*rand(numberOfAgents,1) - 5; % m
 initialPositionY = (5+5).*rand(numberOfAgents,1); % m
-initialSpeed = 1*ones(numberOfAgents, 1); % m/s
+initialSpeed = agentSpeed*ones(numberOfAgents, 1); % m/s
 initialOrientation = pi/2*ones(numberOfAgents, 1); % radians
 
 % Animation only params
@@ -223,26 +232,47 @@ while timeList(end) < totalSimulationTime
     
     % Run perception and decision  steps for each agent
     for currAgent = 1:numberOfAgents
-       if (mod(length(timeList), numStepsPerUpdate(currAgent)) == 0)
-            % run the perception step and update decision input
-            decisionInput = agentPerception3(currAgent, statesNow, params);
+      if modelCalovi == 0 || modelCalovi == 1
+	if (mod(length(timeList), numStepsPerUpdate(currAgent)) == 0)
+          % run the perception step and update decision input
+          decisionInput = agentPerception3(currAgent, statesNow, params);
             
-            % run the decision step and update action input
-            if modelCalovi == 1 % Gaussian curves rather than radii
-                actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
-            else % Fixed radii
-                actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
-            end
+          % run the decision step and update action input
+          if modelCalovi == 1 % Gaussian curves rather than radii
+            actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
+          else % Fixed radii
+            actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
+          end
         end
+      elseif modelCalovi == 2
+	if length(timeList) == numStepsPerUpdate(currAgent)  % if you've hit the next decision point, re-burst
+	  decisionInput = agentPerception3(currAgent, statesNow, params);
+	  actionInput = agentDecisionCalovi(currAgent, params, decisionInput, actionInput);
+	  actionInput.desiredSpeed(currAgent) = agentSpeed;
+	  % now set the next time when you'll burst again:
+	  numStepsPerUpdate(currAgent) = max(numStepsPerUpdate(currAgent) + round((burstTimeMean + burstTimeStd*randn)/simStepTime),numStepsPerUpdate(currAgent)+1);  % the max is for low-end outliers of the gaussian so you don't get stuck never updating again
+	else  % keep coasting: reduce speed
+	  actionInput.desiredSpeed(currAgent) = actionInput.desiredSpeed(currAgent) * exp(-simStepTime/0.8);
+	end
+      else
+	disp('Undefined movement model'),keyboard
+      end
     end
     
     % If destination was reached, set desired agent speed and current
     % agents speed to 0.1
-    actionInput.desiredSpeed(destinationReached == 0 ) = 0.1;
+%    actionInput.desiredSpeed(destinationReached == 0 ) = 0.1;
     statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
 
+%if length(timeList)>800, keyboard, end% && (currAgent==1 || currAgent==2), keyboard, end
     % run the action step for all the agents and update the state list
-    statesNow = agentAction2(statesNow, params, actionInput);  
+    if modelCalovi == 0 || modelCalovi == 1
+      statesNow = agentAction2(statesNow, params, actionInput);  
+    elseif modelCalovi == 2
+      statesNow = agentAction2a(statesNow, params, actionInput);
+    else
+      disp('Undefined movement model'),keyboard
+    end
     
     % add on the states
     statesList(:, end+1) = statesNow;
@@ -270,11 +300,11 @@ while timeList(end) < totalSimulationTime
     end
 end
 
-% Output number of succesfuly agents
+% Output number of successful agents
 display([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
 display(['minimum time to goal: ', num2str(min(goalReachTime))]);
 display(['maximum time to goal: ', num2str(max(goalReachTime))]);
-display(['median time to goal: ', num2str(median(goalReachTime,'omitnan'))]);
+display(['median time to goal: ', num2str(nanmedian(goalReachTime))]);
 
 %% Unpack output states
 agentsXOut = statesList(1:numberOfAgents,:)';
@@ -306,7 +336,8 @@ semiAgentSize = agentLength/2;
 
 warning('off','arrow:warnlimits')
 
-for currTimeIndex = 1:10*numStepsPerUpdate:length(timeList)
+if modelCalovi==0 || modelCalovi==1, showStep = 10*numStepsPerUpdate; else showStep = 10; end
+for currTimeIndex = 1:showStep:length(timeList)
     set(0, 'currentfigure',2);
     plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
     hold on
