@@ -68,9 +68,6 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     % Agent dynamics
     turnRate = agentParameters(10); % units of radians per second. turning speed limit
 
-    % How close to the destination do you need to be to have succeeded?
-    destinationSuccessCriterion = goalSize;
-
     % Simulation parameters
     totalSimulationTime = simParameters(2); % How long does the simulation run?
     simStepTime = simParameters(3); % Step time for each loop of the simulation
@@ -104,8 +101,11 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
     %% Define some environment variables
     % Global attractors
-    goalLocations = [0, 50];
+    goalLocations = [0, 1000]; % 1000 + success criterion create finish'line', preventing crowding @ goal
 
+    % How close to the destination do you need to be to have succeeded?
+    destinationSuccessCriterion = goalLocations(2)-50; % Default goal was at [0,50]
+    
     % Obstacle parameters
     obstacleLocation = [0,20];
     obstacleType = obstacleParameters(1); % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
