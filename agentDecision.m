@@ -9,6 +9,8 @@ obstacleDistance = params.obstacleDistance;
 
 agentWeights = params.agentWeights;
 
+noiseDegree = params.noiseDegree;
+
 % % unpack the states of the agent
 % agentX = stateList(1:numberOfAgents);
 % agentY = stateList(numberOfAgents + 1: 2*numberOfAgents);
@@ -43,7 +45,9 @@ relativeObsUnitVector(obstacleDistance < distanceFromObsLocations, :) = [];
 % Add the unit vectors together and then determine the orientation
 if params.numberOfAgents == 1
     if isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the water source
-        summedUnitVectors = agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1);
+        summedUnitVectors = agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1)...
+                            + agentWeights.Persistence(currAgent)...
+                            * sum([cos(absoluteAgentOrientation),sin(absoluteAgentOrientation)], 1);
     else % if you're near an obstacle forget all about the destination
         summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationAvoid, 1)...
                             - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
@@ -63,12 +67,19 @@ else
     end
 end
 
+
 if sqrt(sum(summedUnitVectors.^2)) == 0
     normalizedSum = [0, 0];
 else
     normalizedSum = summedUnitVectors/sqrt(sum(summedUnitVectors.^2));
 end
 
-actionInput.desiredOrientation(currAgent) = atan2(normalizedSum(2), normalizedSum(1));
+% Convert vectors to angle
+desiredOrientation = atan2(normalizedSum(2), normalizedSum(1));
+
+% Add some noise (in degree) to your desired orientation
+desiredOrientationNoisy = desiredOrientation + (rand()-0.5)*2*pi*noiseDegree/360;
+
+actionInput.desiredOrientation(currAgent) = desiredOrientationNoisy;
 
 end

@@ -50,7 +50,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     agentLength = 1; % The length (head to tail) of each Agents in m.
     
     % How large is the goal. This affects visibility and how close the agents have to be to the goal location to succeed
-    goalSize = 5; 
+    goalSize = 0; 
 
     % How many neighbors should the agent social dynamics consider?
     numberOfNeighbors = agentParameters(2);
@@ -67,6 +67,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
     % Agent dynamics
     turnRate = agentParameters(10); % units of radians per second. turning speed limit
+%     noiseDegree = agentParameters(15);
 
     % Simulation parameters
     totalSimulationTime = simParameters(2); % How long does the simulation run?
@@ -98,13 +99,14 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
     % How much do agents care about obstacle avoidance?
     agentWeights.Obstacle(:) = agentParameters(14);
+    agentWeights.Persistence(:) = agentParameters(15);
 
     %% Define some environment variables
     % Global attractors
     goalLocations = [0, 1000]; % 1000 + success criterion create finish'line', preventing crowding @ goal
 
     % How close to the destination do you need to be to have succeeded?
-    destinationSuccessCriterion = goalLocations(2)-50; % Default goal was at [0,50]
+    destinationSuccessCriterion = goalLocations(2)-1045; % Default goal was at [0,50]
     
     % Obstacle parameters
     obstacleLocation = [0,20];
@@ -172,6 +174,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
     params.turnRate = turnRate;
     params.stepTime = simStepTime;
+%     params.noiseDegree = noiseDegree;
 
     params.agentWeights = agentWeights;
     params.waterSourceLocations = goalLocations;
@@ -218,10 +221,10 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
             end
         end
         
-        % If destination was reached, set desired agent speed and current
-        % agents speed to 0.1
-        actionInput.desiredSpeed(destinationReached == 0 ) = 0.1;
-        statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
+%         % If destination was reached, set desired agent speed and current
+%         % agents speed to 0.1
+%         actionInput.desiredSpeed(destinationReached == 0 ) = 0.1;
+%         statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
 
         % run the action step for all the agents and update the state list
         statesNow = agentAction2(statesNow, params, actionInput);

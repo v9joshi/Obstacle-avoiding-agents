@@ -79,5 +79,9 @@ function decisionInput = agentPerception3(currAgent, stateList, params)
     decisionInput.relativeAgentOrientation = [relativePositions(:,1)./agentDistanceList, relativePositions(:,2)./agentDistanceList];
 
     % Use other agent orientations to determine their direction unit vectors
-    decisionInput.absoluteAgentOrientation = [cos(otherAgentOrientations), sin(otherAgentOrientations)];
+    if numberOfAgents == 1
+        decisionInput.absoluteAgentOrientation = agentOrientation(currAgent);
+    else
+        decisionInput.absoluteAgentOrientation = [cos(otherAgentOrientations), sin(otherAgentOrientations)];
+    end
 end
