@@ -1,10 +1,10 @@
 % Visualizing Couzin vs Calovi models
-close all;
+% close all;
 % Define some agents
 agentDistance = 0:0.01:30;
 
 % Where is this agent looking?
-agentAngle = pi + 0.01;
+agentAngle = pi/2;
 agentOrientation = [cos(agentAngle); sin(agentAngle)];
 
 % What is the goal orientation?
@@ -12,11 +12,11 @@ goalAngle = pi/2;
 goalOrientation = [cos(goalAngle); sin(goalAngle)];
 
 % Where is the other agent looking? (alignment)
-absoluteAgentAngle = pi/2;
+absoluteAgentAngle = pi/4;
 absoluteAgentOrientation = [cos(absoluteAgentAngle); sin(absoluteAgentAngle)];
 
 % Where is the other agent located in space relative to this agent? (attraction/repulsion)
-relativeAgentAngle = 0;
+relativeAgentAngle = pi/2;
 relativeAgentOrientation = [cos(relativeAgentAngle); sin(relativeAgentAngle)];
 
 % What are the constants being used
@@ -112,8 +112,8 @@ plot(0 + 30*cos(goalAngle), 0 + 30*sin(goalAngle), 'bo','markerfacecolor','b')
 title('Agent placement')
 
 subplot(1,2,2)
-plot(agentDistance,desiredChangeCouzin*180/pi, 'k','linewidth',4);
 hold on
+plot(agentDistance,desiredChangeCouzin*180/pi, 'k','linewidth',4);
 plot(agentDistance,desiredChangeCalovi*180/pi, 'r','linewidth',2);
 xlimitVal = get(gca, 'xlim');
 ylimitVal = get(gca, 'ylim');

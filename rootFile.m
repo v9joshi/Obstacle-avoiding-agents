@@ -10,7 +10,7 @@ clc; close all; clear;
 
 %% Define sim parameters
 % Model being used
-modelCalovi = 2; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii; 2 = burst-and-coast modification of 1
+modelCalovi = 0; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii; 2 = burst-and-coast modification of 1
 % Simulation parameters
 totalSimulationTime = 300; % How long does the simulation run?
 simStepTime = 0.01; % Step time for each loop of the simulation
@@ -55,14 +55,14 @@ obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
 obstacleVisibility = 1; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
 
 % Agent dynamics
-turnRate = 2; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
+turnRate = 10; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
 agentSpeed = 5;
 
 % Agent social weights
-avoidWeight = 0.5;
+avoidWeight = 1;
 alignWeight = 7;
-attractWeight = 0.5;
-obstacleWeight = 2;
+attractWeight = 1;
+obstacleWeight = 1;
 
 % Obstacle parameters
 obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
@@ -232,39 +232,38 @@ while timeList(end) < totalSimulationTime
     
     % Run perception and decision  steps for each agent
     for currAgent = 1:numberOfAgents
-      if modelCalovi == 0 || modelCalovi == 1
-	if (mod(length(timeList), numStepsPerUpdate(currAgent)) == 0)
-          % run the perception step and update decision input
-          decisionInput = agentPerception3(currAgent, statesNow, params);
-            
-          % run the decision step and update action input
-          if modelCalovi == 1 % Gaussian curves rather than radii
-            actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
-          else % Fixed radii
-            actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
-          end
+        if modelCalovi == 0 || modelCalovi == 1
+            if (mod(length(timeList), numStepsPerUpdate(currAgent)) == 0)
+              % run the perception step and update decision input
+              decisionInput = agentPerception3(currAgent, statesNow, params);
+
+              % run the decision step and update action input
+              if modelCalovi == 1 % Gaussian curves rather than radii
+                actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
+              else % Fixed radii
+                actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
+              end
+            end
+        elseif modelCalovi == 2
+            if length(timeList) == numStepsPerUpdate(currAgent)  % if you've hit the next decision point, re-burst
+              decisionInput = agentPerception3(currAgent, statesNow, params);
+              actionInput = agentDecisionCalovi(currAgent, params, decisionInput, actionInput);
+              actionInput.desiredSpeed(currAgent) = agentSpeed;
+              % now set the next time when you'll burst again:
+              numStepsPerUpdate(currAgent) = max(numStepsPerUpdate(currAgent) + round((burstTimeMean + burstTimeStd*randn)/simStepTime),numStepsPerUpdate(currAgent)+1);  % the max is for low-end outliers of the gaussian so you don't get stuck never updating again
+            else  % keep coasting: reduce speed
+              actionInput.desiredSpeed(currAgent) = actionInput.desiredSpeed(currAgent) * exp(-simStepTime/0.8);
+            end
+        else
+            disp('Undefined movement model')
         end
-      elseif modelCalovi == 2
-	if length(timeList) == numStepsPerUpdate(currAgent)  % if you've hit the next decision point, re-burst
-	  decisionInput = agentPerception3(currAgent, statesNow, params);
-	  actionInput = agentDecisionCalovi(currAgent, params, decisionInput, actionInput);
-	  actionInput.desiredSpeed(currAgent) = agentSpeed;
-	  % now set the next time when you'll burst again:
-	  numStepsPerUpdate(currAgent) = max(numStepsPerUpdate(currAgent) + round((burstTimeMean + burstTimeStd*randn)/simStepTime),numStepsPerUpdate(currAgent)+1);  % the max is for low-end outliers of the gaussian so you don't get stuck never updating again
-	else  % keep coasting: reduce speed
-	  actionInput.desiredSpeed(currAgent) = actionInput.desiredSpeed(currAgent) * exp(-simStepTime/0.8);
-	end
-      else
-	disp('Undefined movement model'),keyboard
-      end
-    end
-    
+    end    
     % If destination was reached, set desired agent speed and current
     % agents speed to 0.1
-%    actionInput.desiredSpeed(destinationReached == 0 ) = 0.1;
+    % actionInput.desiredSpeed(destinationReached == 0 ) = 0.1;
     statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
 
-%if length(timeList)>800, keyboard, end% && (currAgent==1 || currAgent==2), keyboard, end
+    %if length(timeList)>800, keyboard, end% && (currAgent==1 || currAgent==2), keyboard, end
     % run the action step for all the agents and update the state list
     if modelCalovi == 0 || modelCalovi == 1
       statesNow = agentAction2(statesNow, params, actionInput);  
