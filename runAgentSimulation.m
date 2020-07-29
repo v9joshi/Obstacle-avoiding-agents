@@ -19,6 +19,7 @@
 %          obstacle radius, obstacle visibility range
 %   10) Turn rate
 %   11 - 14) avoid weight, align weight, attract weight, obstacle weight
+%   15) agent persistence
 
 % obstacleParameters is a 4 parameter vector consisting of 
 %   1) Obstacle type - 1 Convex, 2 Wall, 3 Concave
@@ -109,7 +110,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     destinationSuccessCriterion = goalLocations(2)-1045; % Default goal was at [0,50]
     
     % Obstacle parameters
-    obstacleLocation = [0,20];
+    obstacleCenter = [0,20];
     obstacleType = obstacleParameters(1); % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
     obstacleScale = obstacleParameters(2); % length scale of obstacle
     arcAngle = obstacleParameters(3); % how many radians should arc obstacles cover?
@@ -125,24 +126,27 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
         % make convex arc obstacle
         case 1
             arcRadius = obstacleScale/2;
-            obstacleLocation = [obstacleLocation(1), obstacleLocation(2) + ...
+            obstacleCenter = [obstacleCenter(1), obstacleCenter(2) + ...
                                  arcRadius/2];
-            obstacle = obstArc(obstacleLocation(1),obstacleLocation(2),...
+            obstacle = obstArc(obstacleCenter(1),obstacleCenter(2),...
                                arcRadius,(pi/2)+(arcAngle/2),(pi/2)-(arcAngle/2),obstacleSpacing);
+        
         % make wall obstacle
         case 2
-            x1 = obstacleLocation(1) - obstacleScale/2;
-            y1 = obstacleLocation(2);
-            x2 = obstacleLocation(1) + obstacleScale/2;
-            y2 = obstacleLocation(2);
+            x1 = obstacleCenter(1) - obstacleScale/2;
+            y1 = obstacleCenter(2);
+            x2 = obstacleCenter(1) + obstacleScale/2;
+            y2 = obstacleCenter(2);
             obstacle = obstLine(x1, y1, x2, y2, obstacleSpacing, gapSize);
+        
         % make concave arc obstacle
         case 3
             arcRadius = obstacleScale/2;
-            obstacleLocation = [obstacleLocation(1), obstacleLocation(2) - ...
+            obstacleCenter = [obstacleCenter(1), obstacleCenter(2) - ...
                                 arcRadius/2];
-            obstacle = obstArc(obstacleLocation(1),obstacleLocation(2),...
+            obstacle = obstArc(obstacleCenter(1),obstacleCenter(2),...
                                arcRadius,(pi/2)-(arcAngle/2),(pi/2)+(arcAngle/2),obstacleSpacing);
+        
         otherwise
             obstacle = [];
     end

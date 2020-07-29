@@ -70,7 +70,7 @@ obstacleScale = 15;  % length scale of obstacle
 arcAngle = pi;       % how many radians should arc obstacles cover?
 gapSize = 0;         % size of gap in the middle of the wall
 
-obstacleLocation = [0,15]; % The center for the obstacle
+obstacleCenter = [0,15]; % The center for the obstacle
 
 % How large is the goal. This affects visibility and how close the agents have to be to the goal location to succeed
 goalSize = 5; 
@@ -127,23 +127,25 @@ switch obstacleType
     % make convex arc obstacle
     case 1
         arcRadius = obstacleScale/2;
-        obstacleLocation = [obstacleLocation(1), obstacleLocation(2) + ...
+        obstacleCenter = [obstacleCenter(1), obstacleCenter(2) + ...
                              arcRadius/2];
-        obstacle = obstArc(obstacleLocation(1),obstacleLocation(2),...
+        obstacle = obstArc(obstacleCenter(1),obstacleCenter(2),...
                            arcRadius,(pi/2)+(arcAngle/2),(pi/2)-(arcAngle/2),obstacleSpacing);
+    
     % make wall obstacle
     case 2
-        x1 = obstacleLocation(1) - obstacleScale/2;
-        y1 = obstacleLocation(2);
-        x2 = obstacleLocation(1) + obstacleScale/2;
-        y2 = obstacleLocation(2);
+        x1 = obstacleCenter(1) - obstacleScale/2;
+        y1 = obstacleCenter(2);
+        x2 = obstacleCenter(1) + obstacleScale/2;
+        y2 = obstacleCenter(2);
         obstacle = obstLine(x1, y1, x2, y2, obstacleSpacing, gapSize);
+    
     % make concave arc obstacle
     case 3
         arcRadius = obstacleScale/2;
-        obstacleLocation = [obstacleLocation(1), obstacleLocation(2) - ...
+        obstacleCenter = [obstacleCenter(1), obstacleCenter(2) - ...
                             arcRadius/2];
-        obstacle = obstArc(obstacleLocation(1),obstacleLocation(2),...
+        obstacle = obstArc(obstacleCenter(1),obstacleCenter(2),...
                            arcRadius,(pi/2)-(arcAngle/2),(pi/2)+(arcAngle/2),obstacleSpacing);
     otherwise
         obstacle = [];
@@ -335,7 +337,12 @@ semiAgentSize = agentLength/2;
 
 warning('off','arrow:warnlimits')
 
-if modelCalovi==0 || modelCalovi==1, showStep = 10*numStepsPerUpdate; else showStep = 10; end
+if modelCalovi==0 || modelCalovi==1
+    showStep = 10*numStepsPerUpdate;
+else
+    showStep = 10;
+end
+
 for currTimeIndex = 1:showStep:length(timeList)
     set(0, 'currentfigure',2);
     plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
