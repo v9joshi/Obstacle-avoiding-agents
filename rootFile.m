@@ -10,7 +10,7 @@ clc; close all; clear;
 
 %% Define sim parameters
 % Model being used
-modelCalovi = 0; % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii; 2 = burst-and-coast modification of 1
+modelSelection = 0; % 0 = Couzin et al, fixed radii; 1 = Calovi et al 2018, gaussian att/ali functions; 2 = burst-and-coast modification of 1
 % Simulation parameters
 totalSimulationTime = 300; % How long does the simulation run?
 simStepTime = 0.01; % Step time for each loop of the simulation
@@ -27,12 +27,11 @@ burstTimeMean = 0.514;
 burstTimeStd = 0.12;
 % distribution of times (in seconds) between agent bursts in the burst-and-coast model
 
-if modelCalovi == 1
+if modelSelection == 1
    numStepsPerUpdate = round(numStepsPerUpdate + (2*rand(numberOfAgents,1) - 1)*0.1.*numStepsPerUpdate);
-end
-if modelCalovi == 2
-   numStepsPerUpdate = round((burstTimeMean + burstTimeStd*randn(numberOfAgents,1))/simStepTime);
-   % This will be treated as a list of time step numbers at which the agents will update with a new kick
+elseif modelSelection == 2
+    % This will be treated as a list of time step numbers at which the agents will update with a new kick
+    numStepsPerUpdate = round((burstTimeMean + burstTimeStd*randn(numberOfAgents,1))/simStepTime);
 end
 
 % How many neighbors should the agent social dynamics consider?
@@ -45,18 +44,19 @@ listOfInformedAgents = randsample(numberOfAgents, informedAgents);
 listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
 
 % Radii for the agents
-avoidDistance = 1;% + 0.15*numberOfAgents; %Closer than that to another agent = repulsion farther = attraction.x0.15
+avoidDistance = 1; % Closer than that to another agent = repulsion farther = attraction.
 alignDistance = 5; %  Distance to other agents where alignment is maximal.
 attractDistance = 10; % Distance to other agents where attraction is maximal.
 
-% Colovi specific params
+% Calovi specific params
 alignYintercept = 0.6; % Y-intercept of alignment gaussian.
 obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
 obstacleVisibility = 1; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
 
 % Agent dynamics
-turnRate = 10; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
-agentSpeed = 5;
+turnRate = 2; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
+agentSpeed = 1; % How fast do agents move?
+noiseDegree = 0; % How noisy is the agent motion from step to step
 
 % Agent social weights
 avoidWeight = 1;
@@ -67,13 +67,12 @@ obstacleWeight = 1;
 % Obstacle parameters
 obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
 obstacleScale = 15;  % length scale of obstacle
-arcAngle = pi;       % how many radians should arc obstacles cover?
+arcLength = pi*7.5;  % length of the obstacle arc in length units (regardless of angle & radius)
+arcRadius = 7.5; % radius of the arc (position stays the same)
+arcAngle = arcLength/arcRadius; % how many degrees should arc obstacles cover?
 gapSize = 0;         % size of gap in the middle of the wall
 
 obstacleCenter = [0,15]; % The center for the obstacle
-
-% How large is the goal. This affects visibility and how close the agents have to be to the goal location to succeed
-goalSize = 5; 
 
 % What are the initial states of the agents?
 initialPositionX = (5+5).*rand(numberOfAgents,1) - 5; % m
@@ -86,7 +85,7 @@ agentLength = 1; % The length (head to tail) of each Agents in m. Used only for 
 arrowheadSize = 7; % Size of arrowheads on plotted agents, in pixels.
 
 % How close to the destination do you need to be to have succeeded?
-destinationSuccessCriterion = goalSize;
+destinationSuccessCriterion = 1000;
 
 %% Set up some weights for the agents
 agentWeights.Destination = zeros(numberOfAgents, 1);
@@ -114,7 +113,7 @@ limitsX = [-30, 30];
 limitsY = [-10, 50];
 
 % Global attractors
-goalLocations = [0, 50];
+goalLocations = [0, 1050];
 
 % Build the obstacle
 groupDiameter = numberOfAgents*avoidDistance;
@@ -199,12 +198,13 @@ params.obstacleVisibility = obstacleVisibility;
 params.turnRate = turnRate;
 params.stepTime = simStepTime;
 
+params.noiseDegree = noiseDegree;
+
 params.agentWeights = agentWeights;
 params.waterSourceLocations = goalLocations;
 params.obstacleLocations = obstacleLocations;
 
 params.agentLength = agentLength;
-params.goalSize = goalSize;
 
 params.obstacleSpacing = obstacleSpacing;
 
@@ -234,19 +234,19 @@ while timeList(end) < totalSimulationTime
     
     % Run perception and decision  steps for each agent
     for currAgent = 1:numberOfAgents
-        if modelCalovi == 0 || modelCalovi == 1
+        if modelSelection == 0 || modelSelection == 1
             if (mod(length(timeList), numStepsPerUpdate(currAgent)) == 0)
               % run the perception step and update decision input
               decisionInput = agentPerception3(currAgent, statesNow, params);
 
               % run the decision step and update action input
-              if modelCalovi == 1 % Gaussian curves rather than radii
+              if modelSelection == 1 % Gaussian curves rather than radii
                 actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
               else % Fixed radii
                 actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
               end
             end
-        elseif modelCalovi == 2
+        elseif modelSelection == 2
             if length(timeList) == numStepsPerUpdate(currAgent)  % if you've hit the next decision point, re-burst
               decisionInput = agentPerception3(currAgent, statesNow, params);
               actionInput = agentDecisionCalovi(currAgent, params, decisionInput, actionInput);
@@ -267,9 +267,9 @@ while timeList(end) < totalSimulationTime
 
     %if length(timeList)>800, keyboard, end% && (currAgent==1 || currAgent==2), keyboard, end
     % run the action step for all the agents and update the state list
-    if modelCalovi == 0 || modelCalovi == 1
+    if modelSelection == 0 || modelSelection == 1
       statesNow = agentAction2(statesNow, params, actionInput);  
-    elseif modelCalovi == 2
+    elseif modelSelection == 2
       statesNow = agentAction2a(statesNow, params, actionInput);
     else
       disp('Undefined movement model'),keyboard
@@ -318,8 +318,7 @@ figure(1)
 plot(agentsXOut, agentsYOut);
 hold on
 plot(obstacleLocations(:,1), obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
-plot(destinationList(:,1), destinationList(:,2), 'ko','MarkerFaceColor','k') 
-plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
+plot([-50,50], [goalLocations(:,2) - 1000,goalLocations(:,2) - 1000] , 'b-')
 hold off
 
 xlabel('Agent x position')
@@ -337,7 +336,7 @@ semiAgentSize = agentLength/2;
 
 warning('off','arrow:warnlimits')
 
-if modelCalovi==0 || modelCalovi==1
+if modelSelection==0 || modelSelection==1
     showStep = 10*numStepsPerUpdate;
 else
     showStep = 10;
@@ -345,9 +344,8 @@ end
 
 for currTimeIndex = 1:showStep:length(timeList)
     set(0, 'currentfigure',2);
-    plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
+    plot([-50,50], [goalLocations(:,2) - 1000,goalLocations(:,2) - 1000] , 'b-')
     hold on
-    plot(destinationList(:,1), destinationList(:,2), 'bo','MarkerFaceColor','g') 
     plot(obstacleLocations(:,1), obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
    
     xlabel('Agents x position')
