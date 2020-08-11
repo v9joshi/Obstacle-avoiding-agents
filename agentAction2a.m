@@ -52,9 +52,9 @@ for currAgent = 1:numberOfAgents
        % also, you don't want to freeze the agent in place too far away, or it may be stuck beyond the range of sensing the obstacle; instead you want it to advance until it's close to the obstacle
        % the right way to do this is to calculate the intersection point, see how far along the line segment it is, and pick a new point just short of that, but I'm tired and am just going to kluge something awful
       if abs(rad12-56.25) < .75  % don't keep advancing when you're close enough
-	 newX(currAgent) = agentX(currAgent); newY(currAgent) = agentY(currAgent);
+            newX(currAgent) = agentX(currAgent); newY(currAgent) = agentY(currAgent);
       else
-	p1x = agentX(currAgent); p1y = agentY(currAgent); p2x = newX(currAgent); p2y = newY(currAgent);
+            p1x = agentX(currAgent); p1y = agentY(currAgent); p2x = newX(currAgent); p2y = newY(currAgent);
 	while (p2x-p1x)^2 + (p2y-p1y)^2 > .75
 	  p3x = p1x + (p2x-p1x)/2; p3y = p1y + (p2y-p1y)/2;
 	  rad12 = p1x^2 + (p1y-11.25)^2; rad22 = p2x^2 + (p2y-11.25)^2; rad32 = p3x^2 + (p3y-11.25)^2;
@@ -63,9 +63,12 @@ for currAgent = 1:numberOfAgents
 	  else
 	    if rad32<56.25, p1x = p3x; p1y = p3y; else p2x = p3x; p2y = p3y; end
 	  end
-	end
+    end
+    
 	newX(currAgent) = p1x; newY(currAgent) = p1y;
       end
+      
+      
     % also also, if you're moving slowly enough to keep getting closer to the obstacle, don't get too close
     elseif ((rad12<56.25 && rad22<56.25 && rad12<rad22 && abs(rad12-56.25)<.75) || (rad12>56.25 && rad22>56.25 && rad12>rad22 && abs(rad12-56.25)<.75)) && (~(agentY(currAgent)<11.25 && newY(currAgent)<11.25))
       newX(currAgent) = agentX(currAgent); newY(currAgent) = agentY(currAgent);

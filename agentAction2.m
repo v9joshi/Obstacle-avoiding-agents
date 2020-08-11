@@ -33,7 +33,6 @@ for currAgent = 1:numberOfAgents
     end
 end
 
-
 dAgentOrientation = min(abs(desiredChangeInOrientation)/stepTime, turnRate).*sign(desiredChangeInOrientation);
 
 % Store and return derivatives

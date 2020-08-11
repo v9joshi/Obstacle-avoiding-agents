@@ -10,7 +10,7 @@ clc; close all; clear;
 
 %% Define sim parameters
 % Model being used
-modelSelection = 0; % 0 = Couzin et al, fixed radii; 1 = Calovi et al 2018, gaussian att/ali functions; 2 = burst-and-coast modification of 1
+modelSelection = 1; % 0 = Couzin et al, fixed radii; 1 = Calovi et al 2018, gaussian att/ali functions; 2 = burst-and-coast modification of 1
 % Simulation parameters
 totalSimulationTime = 300; % How long does the simulation run?
 simStepTime = 0.01; % Step time for each loop of the simulation
@@ -23,10 +23,11 @@ numberOfAgents = 10;
 numStepsPerUpdate = 10*ones(numberOfAgents,1);
 %agentStepTime = simStepTime*numStepsPerUpdate;
 
+% distribution of times (in seconds) between agent bursts in the burst-and-coast model
 burstTimeMean = 0.514;
 burstTimeStd = 0.12;
-% distribution of times (in seconds) between agent bursts in the burst-and-coast model
 
+% Set steps per update
 if modelSelection == 1
    numStepsPerUpdate = round(numStepsPerUpdate + (2*rand(numberOfAgents,1) - 1)*0.1.*numStepsPerUpdate);
 elseif modelSelection == 2
@@ -55,7 +56,7 @@ obstacleVisibility = 1; % Obstacle visibility: Higher = Obs. avoidance 'starts' 
 
 % Agent dynamics
 turnRate = 2; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
-agentSpeed = 1; % How fast do agents move?
+agentSpeed = 5; % How fast do agents move?
 noiseDegree = 0; % How noisy is the agent motion from step to step
 
 % Agent social weights
@@ -126,8 +127,7 @@ switch obstacleType
     % make convex arc obstacle
     case 1
         arcRadius = obstacleScale/2;
-        obstacleCenter = [obstacleCenter(1), obstacleCenter(2) + ...
-                             arcRadius/2];
+        obstacleCenter = [obstacleCenter(1), obstacleCenter(2)];
         obstacle = obstArc(obstacleCenter(1),obstacleCenter(2),...
                            arcRadius,(pi/2)+(arcAngle/2),(pi/2)-(arcAngle/2),obstacleSpacing);
     
@@ -142,8 +142,7 @@ switch obstacleType
     % make concave arc obstacle
     case 3
         arcRadius = obstacleScale/2;
-        obstacleCenter = [obstacleCenter(1), obstacleCenter(2) - ...
-                            arcRadius/2];
+        obstacleCenter = [obstacleCenter(1), obstacleCenter(2)];
         obstacle = obstArc(obstacleCenter(1),obstacleCenter(2),...
                            arcRadius,(pi/2)-(arcAngle/2),(pi/2)+(arcAngle/2),obstacleSpacing);
     otherwise
@@ -155,22 +154,8 @@ if ~isempty(obstacle)
     obstacleY = obstacle(:,2);
 end
 
-%wallObstacleA.Y = []; %  10:avoidDistance/5:15;
-%wallObstacleA.X = []; % -15*ones(length(wallObstacleA.Y),1);
-
-%wallObstacleB.X = -15:obstacleSpacing:(-15 + 2*groupDiameter);
-%wallObstacleB.Y = 15*ones(length(wallObstacleB.X),1);
-
-%obstacleLocations = [wallObstacleA.X(:), wallObstacleA.Y(:);
-%                     wallObstacleB.X(:), wallObstacleB.Y(:)];
 obstacleLocations = [obstacleX(:), obstacleY(:)];
                  
-%% Plot the obstacle
-% figure(11)
-% plot(wallObstacleB.X, wallObstacleB.Y, 'rx')
-% xlim(limitsX);
-% xlim(limitsY);
-
 %% Plot the obstacle
 % figure(11)
 % plot(obstacleX, obstacleY, 'rx')
@@ -207,6 +192,8 @@ params.obstacleLocations = obstacleLocations;
 params.agentLength = agentLength;
 
 params.obstacleSpacing = obstacleSpacing;
+params.obstacleCenter = obstacleCenter;
+params.obstacleRadius = arcRadius;
 
 % Variable initialization
 startTime = 0;
@@ -268,7 +255,7 @@ while timeList(end) < totalSimulationTime
     %if length(timeList)>800, keyboard, end% && (currAgent==1 || currAgent==2), keyboard, end
     % run the action step for all the agents and update the state list
     if modelSelection == 0 || modelSelection == 1
-      statesNow = agentAction2(statesNow, params, actionInput);  
+      statesNow = agentAction3(statesNow, params, actionInput);  
     elseif modelSelection == 2
       statesNow = agentAction2a(statesNow, params, actionInput);
     else
