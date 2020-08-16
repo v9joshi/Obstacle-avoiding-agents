@@ -10,7 +10,7 @@ clc; close all; clear;
 
 %% Define sim parameters
 % Model being used
-modelSelection = 1; % 0 = Couzin et al, fixed radii; 1 = Calovi et al 2018, gaussian att/ali functions; 2 = burst-and-coast modification of 1
+modelSelection = 0; % 0 = Couzin et al, fixed radii; 1 = Calovi et al 2018, gaussian att/ali functions; 2 = burst-and-coast modification of 1
 % Simulation parameters
 totalSimulationTime = 300; % How long does the simulation run?
 simStepTime = 0.01; % Step time for each loop of the simulation
@@ -56,12 +56,12 @@ obstacleVisibility = 1; % Obstacle visibility: Higher = Obs. avoidance 'starts' 
 
 % Agent dynamics
 turnRate = 2; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
-agentSpeed = 5; % How fast do agents move?
+agentSpeed = 1; % How fast do agents move?
 noiseDegree = 0; % How noisy is the agent motion from step to step
 
 % Agent social weights
 avoidWeight = 1;
-alignWeight = 7;
+alignWeight = 1;
 attractWeight = 1;
 obstacleWeight = 1;
 
