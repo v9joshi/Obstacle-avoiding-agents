@@ -8,6 +8,7 @@ xList = agentStatesList(1:numberOfAgents,:);
 yList = agentStatesList(numberOfAgents+1:2*numberOfAgents,:);
 
 goalLocations = environment.goalLocations;
+obstacleLocations = obstacles;
 
 figure(1)
 plot(xList', yList');
@@ -28,7 +29,6 @@ arrowheadSize = 7;
 
 agentsXOut = xList';
 agentsYOut = yList';
-obstacleLocations = obstacles;
 
 agentsOrientationOut = agentStatesList(3*numberOfAgents + 1 :end,:)';
 
