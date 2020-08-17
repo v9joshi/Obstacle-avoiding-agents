@@ -8,11 +8,10 @@ xList = agentStatesList(1:numberOfAgents,:);
 yList = agentStatesList(numberOfAgents+1:2*numberOfAgents,:);
 
 goalLocations = environment.goalLocations;
-obstacleLocations = obstacles;
+obstacleLocations = environment.obstacleLocations;
 
 figure(1)
 plot(xList', yList');
-obstacles = environment.obstacleLocations;
 hold on
 plot(obstacleLocations(:,1), obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
 plot([-50,50], [goalLocations(:,2) - 1000,goalLocations(:,2) - 1000] , 'b-')
