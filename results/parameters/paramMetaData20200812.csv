@@ -1,0 +1,14 @@
+﻿parameter,firstSet,lastSet
+AgentStepTime,1,12
+NumAgents,13,24
+Neighbors,25,36
+FractionInformed,37,48
+AvoidRadius,49,58
+AlignRadius,59,68
+AttractRadius,69,78
+ObstacleRadius,79,86
+TurnRate,87,98
+AvoidWeight,99,112
+AlignWeight,113,119
+AttractWeight,120,133
+ObstacleWeight,134,147
