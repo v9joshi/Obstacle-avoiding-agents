@@ -12,7 +12,7 @@ clc; close all; clear;
 % Model being used
 modelSelection = 0; % 0 = Couzin et al, fixed radii; 1 = Calovi et al 2018, gaussian att/ali functions; 2 = burst-and-coast modification of 1
 % Simulation parameters
-totalSimulationTime = 300; % How long does the simulation run?
+totalSimulationTime = 500; % How long does the simulation run?
 simStepTime = 0.01; % Step time for each loop of the simulation
 
 %% Define agent parameters
@@ -66,7 +66,7 @@ attractWeight = 1;
 obstacleWeight = 1;
 
 % Obstacle parameters
-obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
+obstacleType = 0;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
 obstacleScale = 15;  % length scale of obstacle
 arcLength = pi*7.5;  % length of the obstacle arc in length units (regardless of angle & radius)
 arcRadius = 7.5; % radius of the arc (position stays the same)
@@ -86,7 +86,7 @@ agentLength = 1; % The length (head to tail) of each Agents in m. Used only for 
 arrowheadSize = 7; % Size of arrowheads on plotted agents, in pixels.
 
 % How close to the destination do you need to be to have succeeded?
-destinationSuccessCriterion = 1000;
+destinationSuccessCriterion = 10;
 
 %% Set up some weights for the agents
 agentWeights.Destination = zeros(numberOfAgents, 1);
@@ -106,6 +106,7 @@ agentWeights.Alignment(:) = alignWeight;%1;
 
 % How much do agents care about obstacle avoidance?
 agentWeights.Obstacle(:) = obstacleWeight;
+agentWeights.Persistence = 0;
 
 %% Define some environment variables
 
@@ -224,7 +225,7 @@ while timeList(end) < totalSimulationTime
         if modelSelection == 0 || modelSelection == 1
             if (mod(length(timeList), numStepsPerUpdate(currAgent)) == 0)
               % run the perception step and update decision input
-              decisionInput = agentPerception3(currAgent, statesNow, params);
+              decisionInput = agentPerception3_dev(currAgent, statesNow, params);
 
               % run the decision step and update action input
               if modelSelection == 1 % Gaussian curves rather than radii
@@ -235,7 +236,7 @@ while timeList(end) < totalSimulationTime
             end
         elseif modelSelection == 2
             if length(timeList) == numStepsPerUpdate(currAgent)  % if you've hit the next decision point, re-burst
-              decisionInput = agentPerception3(currAgent, statesNow, params);
+              decisionInput = agentPerception3_dev(currAgent, statesNow, params);
               actionInput = agentDecisionCalovi(currAgent, params, decisionInput, actionInput);
               actionInput.desiredSpeed(currAgent) = agentSpeed;
               % now set the next time when you'll burst again:
@@ -255,7 +256,7 @@ while timeList(end) < totalSimulationTime
     %if length(timeList)>800, keyboard, end% && (currAgent==1 || currAgent==2), keyboard, end
     % run the action step for all the agents and update the state list
     if modelSelection == 0 || modelSelection == 1
-      statesNow = agentAction3(statesNow, params, actionInput);  
+      statesNow = agentAction2(statesNow, params, actionInput);  
     elseif modelSelection == 2
       statesNow = agentAction2a(statesNow, params, actionInput);
     else
@@ -316,53 +317,64 @@ axis equal
 axisLimits.X = get(gca, 'xlim');
 axisLimits.Y = get(gca, 'ylim');
 
-%% Animate the motion
-figure(2)
-% How large do we want each agent to be
-semiAgentSize = agentLength/2;
+% %% Animate the motion
+% figure(2)
+% % How large do we want each agent to be
+% semiAgentSize = agentLength/2;
+% 
+% warning('off','arrow:warnlimits')
+% 
+% if modelSelection==0 || modelSelection==1
+%     showStep = 10*numStepsPerUpdate;
+% else
+%     showStep = 10;
+% end
+% 
+% for currTimeIndex = 1:showStep:length(timeList)
+%     set(0, 'currentfigure',2);
+%     plot([-50,50], [goalLocations(:,2) - 1000,goalLocations(:,2) - 1000] , 'b-')
+%     hold on
+%     plot(obstacleLocations(:,1), obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
+%    
+%     xlabel('Agents x position')
+%     ylabel('Agents y position')
+% 
+%     title('Agent home')
+%     axis equal    
+%     xlim(axisLimits.X)
+%     ylim(axisLimits.Y)
+%     
+%     % draw regular agents
+%     if ~isempty(listOfUninformedAgents)
+%         arrow([agentsXOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
+%                agentsYOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
+%               [agentsXOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
+%                agentsYOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
+%               arrowheadSize, 'color', 'k');
+%     end
+%     % draw leader agents
+%     if ~isempty(listOfInformedAgents)
+%         arrow([agentsXOut(currTimeIndex,listOfInformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents));...
+%                agentsYOut(currTimeIndex,listOfInformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
+%               [agentsXOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents));...
+%                agentsYOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
+%               arrowheadSize, 'color', 'r');
+%     end
+%     hold off
+%     pause(0.01);
+%     
+% end
 
-warning('off','arrow:warnlimits')
+%% Measure the turn radius
+meanAgentX = mean(agentsXOut(end-1000:end,:),2);
+meanAgentY = mean(agentsYOut(end-1000:end,:),2);
 
-if modelSelection==0 || modelSelection==1
-    showStep = 10*numStepsPerUpdate;
-else
-    showStep = 10;
-end
+agentTurnRadius = 0.5*(max(meanAgentY) - min(meanAgentY));
+agentTurnCurvature = 1/agentTurnRadius;
 
-for currTimeIndex = 1:showStep:length(timeList)
-    set(0, 'currentfigure',2);
-    plot([-50,50], [goalLocations(:,2) - 1000,goalLocations(:,2) - 1000] , 'b-')
-    hold on
-    plot(obstacleLocations(:,1), obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
-   
-    xlabel('Agents x position')
-    ylabel('Agents y position')
-
-    title('Agent home')
-    axis equal    
-    xlim(axisLimits.X)
-    ylim(axisLimits.Y)
-    
-    % draw regular agents
-    if ~isempty(listOfUninformedAgents)
-        arrow([agentsXOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
-               agentsYOut(currTimeIndex,listOfUninformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
-              [agentsXOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfUninformedAgents));...
-               agentsYOut(currTimeIndex,listOfUninformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfUninformedAgents))]',...
-              arrowheadSize, 'color', 'k');
-    end
-    % draw leader agents
-    if ~isempty(listOfInformedAgents)
-        arrow([agentsXOut(currTimeIndex,listOfInformedAgents) - semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents));...
-               agentsYOut(currTimeIndex,listOfInformedAgents) - semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
-              [agentsXOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*cos(agentsOrientationOut(currTimeIndex,listOfInformedAgents));...
-               agentsYOut(currTimeIndex,listOfInformedAgents) + semiAgentSize*sin(agentsOrientationOut(currTimeIndex,listOfInformedAgents))]',...
-              arrowheadSize, 'color', 'r');
-    end
-    hold off
-    pause(0.01);
-    
-end
+figure(3)
+plot(meanAgentX, meanAgentY);
+axis equal
 
 % * avoidDistance function determined by:
 %   1. simulating different group sizes w/ different avoidDist,

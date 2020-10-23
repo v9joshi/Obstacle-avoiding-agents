@@ -8,14 +8,14 @@ xList = agentStatesList(1:numberOfAgents,:);
 yList = agentStatesList(numberOfAgents+1:2*numberOfAgents,:);
 
 goalLocations = environment.goalLocations;
+obstacleLocations = environment.obstacleLocations;
 
 figure(1)
 plot(xList', yList');
-obstacles = environment.obstacleLocations;
 hold on
-plot(obstacles(:,1), obstacles(:,2),'kx')
-plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
-axis equal
+plot(obstacleLocations(:,1), obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
+plot([-50,50], [goalLocations(:,2) - 1000,goalLocations(:,2) - 1000] , 'b-')
+hold off
 
 axisLimits.X = get(gca, 'xlim');
 axisLimits.Y = get(gca, 'ylim');
@@ -28,7 +28,6 @@ arrowheadSize = 7;
 
 agentsXOut = xList';
 agentsYOut = yList';
-obstacleLocations = obstacles;
 
 agentsOrientationOut = agentStatesList(3*numberOfAgents + 1 :end,:)';
 
@@ -46,7 +45,7 @@ numStepsPerUpdate = 10;
 
 for currTimeIndex = 1:10*numStepsPerUpdate:length(timeList)
     set(0, 'currentfigure',2);
-    plot(goalLocations(:,1), goalLocations(:,2), 'bo','MarkerFaceColor','b') 
+    plot([-50,50], [goalLocations(:,2) - 1000,goalLocations(:,2) - 1000] , 'b-')
     hold on
     plot(destinationList(:,1), destinationList(:,2), 'bo','MarkerFaceColor','g') 
     plot(obstacleLocations(:,1), obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 

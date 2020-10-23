@@ -36,7 +36,7 @@
 
 function [goalReachTime, agent, environment] = runAgentSimulation(simParameters, agentParameters, obstacleParameters, varargin)    
     % Model being used
-    modelCalovi = simParameters(1); % 1 = Calovi et al 2018, gaussian att/ali functions; 0 = Couzin et al, fixed radii
+    modelSelection = simParameters(1); % 0 = Couzin et al, fixed radii; 1 = Calovi et al 2018, gaussian att/ali functions;
 
     % Agent parameters
     numberOfAgents = agentParameters(1); % How many Agents exist?
@@ -68,7 +68,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
     % Agent dynamics
     turnRate = agentParameters(10); % units of radians per second. turning speed limit
-%     noiseDegree = agentParameters(15);
+    noiseDegree = 0;%agentParameters(15);
 
     % Simulation parameters
     totalSimulationTime = simParameters(2); % How long does the simulation run?
@@ -83,6 +83,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     agentWeights.Attraction = zeros(numberOfAgents, 1);
     agentWeights.Alignment = zeros(numberOfAgents, 1);
     agentWeights.Obstacle = zeros(numberOfAgents, 1);
+    agentWeights.Persistence = 0;
 
     % How many agents know the destination?
     fractionInformed = agentParameters(3);
@@ -100,14 +101,13 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
     % How much do agents care about obstacle avoidance?
     agentWeights.Obstacle(:) = agentParameters(14);
-    agentWeights.Persistence(:) = agentParameters(15);
 
     %% Define some environment variables
     % Global attractors
-    goalLocations = [0, 1000]; % 1000 + success criterion create finish'line', preventing crowding @ goal
+    goalLocations = [0, 1050]; % 1000 + success criterion create finish'line', preventing crowding @ goal
 
     % How close to the destination do you need to be to have succeeded?
-    destinationSuccessCriterion = goalLocations(2)-1045; % Default goal was at [0,50]
+    destinationSuccessCriterion = 1000; % Default goal was at [0,50]
     
     % Obstacle parameters
     obstacleCenter = [0,20];
@@ -178,14 +178,17 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
     params.turnRate = turnRate;
     params.stepTime = simStepTime;
-%     params.noiseDegree = noiseDegree;
+    params.noiseDegree = noiseDegree;
 
     params.agentWeights = agentWeights;
     params.waterSourceLocations = goalLocations;
     params.obstacleLocations = obstacleLocations;
 
     params.agentLength = agentLength;
+
     params.obstacleSpacing = obstacleSpacing;
+    params.obstacleCenter = obstacleCenter;
+    params.obstacleRadius = arcRadius;
 
     params.goalSize = goalSize;
 
@@ -217,7 +220,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
                 decisionInput = agentPerception3(currAgent, statesNow, params);    
 
                 % run the decision step and update action input
-                if modelCalovi == 1 % Gaussian curves rather than radii
+                if modelSelection == 1 % Gaussian curves rather than radii
                     actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
                 else % Fixed radii
                     actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
@@ -227,11 +230,10 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
         
 %         % If destination was reached, set desired agent speed and current
 %         % agents speed to 0.1
-%         actionInput.desiredSpeed(destinationReached == 0 ) = 0.1;
-%         statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
+        statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
 
         % run the action step for all the agents and update the state list
-        statesNow = agentAction2(statesNow, params, actionInput);
+        statesNow = agentAction3(statesNow, params, actionInput);
 
         % add on the states
         statesList(:,end+1) = statesNow;
