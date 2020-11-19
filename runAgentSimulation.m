@@ -40,11 +40,12 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
     % Agent parameters
     numberOfAgents = agentParameters(1); % How many Agents exist?
+    agentSpeed = 1;
     
     % What are the initial states of the agents?
     initialPositionX = (5+5).*rand(numberOfAgents,1) - 5; % m
     initialPositionY = (5+5).*rand(numberOfAgents,1) - 5; % m
-    initialSpeed = 1*ones(numberOfAgents, 1); % m/s
+    initialSpeed = agentSpeed*ones(numberOfAgents, 1); % m/s
     initialOrientation = (pi/2)+zeros(numberOfAgents, 1); % radians
 
     % Animation only params
@@ -101,6 +102,18 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
     % How much do agents care about obstacle avoidance?
     agentWeights.Obstacle(:) = agentParameters(14);
+    
+    %% Burst and coast specific parameters
+    % distribution of times (in seconds) between agent bursts in the burst-and-coast model
+    burstTimeMean = 0.514;
+    burstTimeStd = 0.12;
+    
+    % Set steps per update
+    if modelSelection == 2
+        % This will be treated as a list of time step numbers at which the agents will update with a new kick
+        numStepsPerUpdate = round((burstTimeMean + burstTimeStd*randn(numberOfAgents,1))/simStepTime);
+    end
+
 
     %% Define some environment variables
     % Global attractors
@@ -213,28 +226,57 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
         % What is the current state?
         statesNow = statesList(:,end);
 
-        % Run perception and decision  steps for each agent
-        if (mod(length(timeList), numStepsPerUpdate) == 0)
-            for currAgent = 1:numberOfAgents
-                % run the perception step and update decision input
-                decisionInput = agentPerception3(currAgent, statesNow, params);    
+%         % Run perception and decision  steps for each agent
+%         if (mod(length(timeList), numStepsPerUpdate) == 0)
+%             for currAgent = 1:numberOfAgents
+%                 % run the perception step and update decision input
+%                 decisionInput = agentPerception3(currAgent, statesNow, params);    
+% 
+%                 % run the decision step and update action input
+%                 if modelSelection == 1 % Gaussian curves rather than radii
+%                     actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
+%                 else % Fixed radii
+%                     actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
+%                 end
+%             end
+%         end
 
-                % run the decision step and update action input
-                if modelSelection == 1 % Gaussian curves rather than radii
+        % Run perception and decision  steps for each agent
+        for currAgent = 1:numberOfAgents
+            if modelSelection == 0 || modelSelection == 1
+                if (mod(length(timeList), numStepsPerUpdate(currAgent)) == 0)
+                  % run the perception step and update decision input
+                  decisionInput = agentPerception3(currAgent, statesNow, params);
+
+                  % run the decision step and update action input
+                  if modelSelection == 1 % Gaussian curves rather than radii
                     actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
-                else % Fixed radii
+                  else % Fixed radii
                     actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
+                  end
                 end
+            elseif modelSelection == 2
+                if length(timeList) == numStepsPerUpdate(currAgent)  % if you've hit the next decision point, re-burst
+                  decisionInput = agentPerception3(currAgent, statesNow, params);
+                  actionInput = agentDecisionCalovi(currAgent, params, decisionInput, actionInput);
+                  actionInput.desiredSpeed(currAgent) = agentSpeed;
+                  % now set the next time when you'll burst again:
+                  numStepsPerUpdate(currAgent) = max(numStepsPerUpdate(currAgent) + round((burstTimeMean + burstTimeStd*randn)/simStepTime),numStepsPerUpdate(currAgent)+1);  % the max is for low-end outliers of the gaussian so you don't get stuck never updating again
+                else  % keep coasting: reduce speed
+                  actionInput.desiredSpeed(currAgent) = actionInput.desiredSpeed(currAgent) * exp(-simStepTime/0.8);
+                end
+            else
+                disp('Undefined movement model')
             end
-        end
+        end   
         
 %         % If destination was reached, set desired agent speed and current
 %         % agents speed to 0.1
         statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
-
+       
         % run the action step for all the agents and update the state list
-        statesNow = agentAction3(statesNow, params, actionInput);
-
+        statesNow = agentAction2a(statesNow, params, actionInput);
+  
         % add on the states
         statesList(:,end+1) = statesNow;
         
