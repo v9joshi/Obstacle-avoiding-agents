@@ -10,9 +10,9 @@ clc; close all; clear;
 
 %% Define sim parameters
 % Model being used
-modelSelection = 0; % 0 = Couzin et al, fixed radii; 1 = Calovi et al 2018, gaussian att/ali functions; 2 = burst-and-coast modification of 1
+modelSelection = 2; % 0 = Couzin et al, fixed radii; 1 = Calovi et al 2018, gaussian att/ali functions; 2 = burst-and-coast modification of 1
 % Simulation parameters
-totalSimulationTime = 300; % How long does the simulation run?
+totalSimulationTime = 1000; % How long does the simulation run?
 simStepTime = 0.01; % Step time for each loop of the simulation
 
 %% Define agent parameters
@@ -29,7 +29,7 @@ burstTimeStd = 0.12;
 
 % Set steps per update
 if modelSelection == 1
-   numStepsPerUpdate = round(numStepsPerUpdate + (2*rand(numberOfAgents,1) - 1)*0.1.*numStepsPerUpdate);
+   numStepsPerUpdate = round(numStepsPerUpdate + (2*rand(numberOfAgents,1) - 1)*simStepTime.*numStepsPerUpdate);
 elseif modelSelection == 2
     % This will be treated as a list of time step numbers at which the agents will update with a new kick
     numStepsPerUpdate = round((burstTimeMean + burstTimeStd*randn(numberOfAgents,1))/simStepTime);
@@ -55,13 +55,13 @@ obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
 obstacleVisibility = 1; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
 
 % Agent dynamics
-turnRate = 2; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
+turnRate = inf; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
 agentSpeed = 1; % How fast do agents move?
 noiseDegree = 0; % How noisy is the agent motion from step to step
 
 % Agent social weights
 avoidWeight = 1;
-alignWeight = 1;
+alignWeight = 7;
 attractWeight = 1;
 obstacleWeight = 1;
 
@@ -73,7 +73,7 @@ arcRadius = 7.5; % radius of the arc (position stays the same)
 arcAngle = arcLength/arcRadius; % how many degrees should arc obstacles cover?
 gapSize = 0;         % size of gap in the middle of the wall
 
-obstacleCenter = [0,15]; % The center for the obstacle
+obstacleCenter = [0,11.25]; % The center for the obstacle
 
 % What are the initial states of the agents?
 initialPositionX = (5+5).*rand(numberOfAgents,1) - 5; % m
@@ -235,6 +235,7 @@ while timeList(end) < totalSimulationTime
             end
         elseif modelSelection == 2
             if length(timeList) == numStepsPerUpdate(currAgent)  % if you've hit the next decision point, re-burst
+              disp(['burst ', num2str(currAgent)])
               decisionInput = agentPerception3(currAgent, statesNow, params);
               actionInput = agentDecisionCalovi(currAgent, params, decisionInput, actionInput);
               actionInput.desiredSpeed(currAgent) = agentSpeed;
@@ -255,11 +256,11 @@ while timeList(end) < totalSimulationTime
     %if length(timeList)>800, keyboard, end% && (currAgent==1 || currAgent==2), keyboard, end
     % run the action step for all the agents and update the state list
     if modelSelection == 0 || modelSelection == 1
-      statesNow = agentAction3(statesNow, params, actionInput);  
+        statesNow = agentAction3(statesNow, params, actionInput);  
     elseif modelSelection == 2
-      statesNow = agentAction2a(statesNow, params, actionInput);
+        statesNow = agentAction3(statesNow, params, actionInput);
     else
-      disp('Undefined movement model'),keyboard
+        disp('Undefined movement model'),keyboard
     end
     
     % add on the states
@@ -289,10 +290,10 @@ while timeList(end) < totalSimulationTime
 end
 
 % Output number of successful agents
-display([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
-display(['minimum time to goal: ', num2str(min(goalReachTime))]);
-display(['maximum time to goal: ', num2str(max(goalReachTime))]);
-display(['median time to goal: ', num2str(nanmedian(goalReachTime))]);
+disp([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
+disp(['minimum time to goal: ', num2str(min(goalReachTime))]);
+disp(['maximum time to goal: ', num2str(max(goalReachTime))]);
+disp(['median time to goal: ', num2str(nanmedian(goalReachTime))]);
 
 %% Unpack output states
 agentsXOut = statesList(1:numberOfAgents,:)';

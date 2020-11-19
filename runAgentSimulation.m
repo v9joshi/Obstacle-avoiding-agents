@@ -114,7 +114,6 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
         numStepsPerUpdate = round((burstTimeMean + burstTimeStd*randn(numberOfAgents,1))/simStepTime);
     end
 
-
     %% Define some environment variables
     % Global attractors
     goalLocations = [0, 1050]; % 1000 + success criterion create finish'line', preventing crowding @ goal
@@ -219,64 +218,59 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     actionInput.desiredSpeed = initialSpeed;
     actionInput.desiredOrientation = initialOrientation;
 
-
     %% Run the simulation
     while timeList(end) < totalSimulationTime
 
         % What is the current state?
         statesNow = statesList(:,end);
 
-%         % Run perception and decision  steps for each agent
-%         if (mod(length(timeList), numStepsPerUpdate) == 0)
-%             for currAgent = 1:numberOfAgents
-%                 % run the perception step and update decision input
-%                 decisionInput = agentPerception3(currAgent, statesNow, params);    
-% 
-%                 % run the decision step and update action input
-%                 if modelSelection == 1 % Gaussian curves rather than radii
-%                     actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
-%                 else % Fixed radii
-%                     actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
-%                 end
-%             end
-%         end
-
         % Run perception and decision  steps for each agent
         for currAgent = 1:numberOfAgents
-            if modelSelection == 0 || modelSelection == 1
+            if modelSelection == 0 || modelSelection == 1  % Couzin and Calovi variants
                 if (mod(length(timeList), numStepsPerUpdate(currAgent)) == 0)
-                  % run the perception step and update decision input
-                  decisionInput = agentPerception3(currAgent, statesNow, params);
+                    % run the perception step and update decision input
+                    decisionInput = agentPerception3(currAgent, statesNow, params);
 
-                  % run the decision step and update action input
-                  if modelSelection == 1 % Gaussian curves rather than radii
-                    actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
-                  else % Fixed radii
-                    actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
-                  end
+                    % run the decision step and update action input
+                    if modelSelection == 1 % Gaussian curves rather than radii, i.e. Calovi
+                        actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
+                    else % Fixed radii, i.e. Couzin
+                        actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
+                    end
                 end
-            elseif modelSelection == 2
+            elseif modelSelection == 2 % Burst and coast variant
                 if length(timeList) == numStepsPerUpdate(currAgent)  % if you've hit the next decision point, re-burst
-                  decisionInput = agentPerception3(currAgent, statesNow, params);
-                  actionInput = agentDecisionCalovi(currAgent, params, decisionInput, actionInput);
-                  actionInput.desiredSpeed(currAgent) = agentSpeed;
-                  % now set the next time when you'll burst again:
-                  numStepsPerUpdate(currAgent) = max(numStepsPerUpdate(currAgent) + round((burstTimeMean + burstTimeStd*randn)/simStepTime),numStepsPerUpdate(currAgent)+1);  % the max is for low-end outliers of the gaussian so you don't get stuck never updating again
+                    % run the perception step and update decision input
+                    decisionInput = agentPerception3(currAgent, statesNow, params);
+                    
+                    % run the decision step and update action input
+                    actionInput = agentDecisionCalovi(currAgent, params, decisionInput, actionInput);
+                    actionInput.desiredSpeed(currAgent) = agentSpeed;
+                    
+                    % now set the next time when you'll burst again:
+                    numStepsPerUpdate(currAgent) = max(numStepsPerUpdate(currAgent) + round((burstTimeMean + burstTimeStd*randn)/simStepTime),numStepsPerUpdate(currAgent)+1);  % the max is for low-end outliers of the gaussian so you don't get stuck never updating again
                 else  % keep coasting: reduce speed
-                  actionInput.desiredSpeed(currAgent) = actionInput.desiredSpeed(currAgent) * exp(-simStepTime/0.8);
+                    actionInput.desiredSpeed(currAgent) = actionInput.desiredSpeed(currAgent) * exp(-simStepTime/0.8);
                 end
             else
+                % Exception handling
                 disp('Undefined movement model')
             end
         end   
         
-%         % If destination was reached, set desired agent speed and current
-%         % agents speed to 0.1
+       % If destination was reached, set desired agent speed and current
+       % agents speed to 0.1
         statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
        
         % run the action step for all the agents and update the state list
-        statesNow = agentAction2a(statesNow, params, actionInput);
-  
+        if modelSelection == 0 || modelSelection == 1
+            statesNow = agentAction3(statesNow, params, actionInput);  
+        elseif modelSelection == 2
+            statesNow = agentAction3(statesNow, params, actionInput);
+        else
+            disp('Undefined movement model'),keyboard
+        end
+        
         % add on the states
         statesList(:,end+1) = statesNow;
         
@@ -300,7 +294,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
         % If all the agents reached the destination, then stop the simulation
         if fractionReached == 1
             break;
-         end
+        end
 
     end
     
@@ -315,9 +309,9 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     
     % Output number of succesful agents
     if any(strcmp('verbose',varargin))
-        display([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
-        display(['minimum time to goal: ', num2str(min(goalReachTime))]);
-        display(['maximum time to goal: ', num2str(max(goalReachTime))]);
-        display(['median time to goal: ', num2str(median(goalReachTime,'omitnan'))]);
+        disp([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
+        disp(['minimum time to goal: ', num2str(min(goalReachTime))]);
+        disp(['maximum time to goal: ', num2str(max(goalReachTime))]);
+        disp(['median time to goal: ', num2str(median(goalReachTime,'omitnan'))]);
     end
 end
