@@ -133,16 +133,16 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     % Make some obstacles
     obstacleX = [];
     obstacleY = [];
+    arcRadius = obstacleScale/2;
 
     switch obstacleType
-        % make convex arc obstacle
+        % make box obstacle
         case 1
-            arcRadius = obstacleScale/2;
-            obstacleCenter = [obstacleCenter(1), obstacleCenter(2) + ...
-                                 arcRadius/2];
-            obstacle = obstArc(obstacleCenter(1),obstacleCenter(2),...
-                               arcRadius,(pi/2)+(arcAngle/2),(pi/2)-(arcAngle/2),obstacleSpacing);
-        
+            x1 = obstacleCenter(1) - obstacleScale/2;
+            y1 = obstacleCenter(2);
+            x2 = obstacleCenter(1) + obstacleScale/2;
+            y2 = obstacleCenter(2);
+            obstacle = obstBox(x1, y1, x2, y2, obstacleSpacing, gapSize);
         % make wall obstacle
         case 2
             x1 = obstacleCenter(1) - obstacleScale/2;
@@ -150,15 +150,28 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
             x2 = obstacleCenter(1) + obstacleScale/2;
             y2 = obstacleCenter(2);
             obstacle = obstLine(x1, y1, x2, y2, obstacleSpacing, gapSize);
-        
         % make concave arc obstacle
         case 3
-            arcRadius = obstacleScale/2;
             obstacleCenter = [obstacleCenter(1), obstacleCenter(2) - ...
                                 arcRadius/2];
             obstacle = obstArc(obstacleCenter(1),obstacleCenter(2),...
                                arcRadius,(pi/2)-(arcAngle/2),(pi/2)+(arcAngle/2),obstacleSpacing);
         
+        % make arrowhead obstacle
+        case 4
+            x1 = obstacleCenter(1) - obstacleScale/2;
+            y1 = obstacleCenter(2) - obstacleScale/2;
+            x2 = obstacleCenter(1);
+            y2 = obstacleCenter(2);
+            obstacleLeft = obstLine(x1, y1, x2, y2, obstacleSpacing, gapSize);
+            
+            x1 = obstacleCenter(1);
+            y1 = obstacleCenter(2);
+            x2 = obstacleCenter(1) + obstacleScale/2;
+            y2 = obstacleCenter(2) - obstacleScale/2;
+            obstacleRight = obstLine(x1, y1, x2, y2, obstacleSpacing, gapSize);
+            
+            obstacle = [obstacleLeft; obstacleRight];
         otherwise
             obstacle = [];
     end

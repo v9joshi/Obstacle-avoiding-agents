@@ -1,5 +1,5 @@
 % All the params
-clc; clear all; close all;
+clc; clear; close all;
 
 % paramSet =   [0,300,0.01,0.01,10,inf,1,1,5,10,0.6,1,50,2,1,36.3,1,6.56,3,15,pi,0;
 %               1,300,0.01,0.01,10,inf,1,1,5,10,0.6,1,50,2,1,36.3,1,6.56,3,15,pi,0;
@@ -30,12 +30,12 @@ clc; clear all; close all;
 %   11 - 14) avoid weight, align weight, attract weight, obstacle weight
 
 % obstacleParameters is a 4 parameter vector consisting of 
-%   1) Obstacle type - 1 Convex, 2 Wall, 3 Concave
+%   1) Obstacle type - 1 Box, 2 Wall, 3 Concave, 4 Arrow head
 %   2) Obstacle scale - The diameter/length of the obstacle
 %   3) Obstacle arc - The angular range of a convex/concave obstacle
 %   4) Gap size - The size of the gap in the middle of the obstacle
 % Load the parameters
-paramTable = readtable('parameters20201118.csv');
+paramTable = readtable('parameters20201204.csv');
 
 paramSet = [paramTable.modelCalovi, paramTable.totalSimulationTime, paramTable.physicsStepTime, paramTable.agentStepTime,...
             paramTable.numberOfAgents, paramTable.numberOfNeighbors, paramTable.fractionInformed, paramTable.avoidDistance,...
@@ -43,7 +43,6 @@ paramSet = [paramTable.modelCalovi, paramTable.totalSimulationTime, paramTable.p
             paramTable.obstacleVisibility, paramTable.turnRate, paramTable.avoidWeight, paramTable.alignWeight,...
             paramTable.attractWeight, paramTable.obstacleWeight, paramTable.obstacleType, paramTable.obstacleScale,...
             paramTable.arcAngle, paramTable.gapSize];
-
 
 numReps = 50;
 
@@ -53,7 +52,7 @@ if ~exist('Data4','dir')
 end
 
 % Loop through the param set
-for setNum = 1:length(paramSet)
+for setNum = 1:size(paramSet,1)
     % Unpack the parameters
     simParameters      = paramSet(setNum,1:4);
     agentParameters    = paramSet(setNum,5:18);
