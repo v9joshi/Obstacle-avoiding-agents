@@ -47,8 +47,8 @@ paramSet = [paramTable.modelCalovi, paramTable.totalSimulationTime, paramTable.p
 numReps = 50;
 
 % Create the data storage folder
-if ~exist('Data4','dir')
-    mkdir('Data4')
+if ~exist('Data5','dir')
+    mkdir('Data5')
 end
 
 % Loop through the param set
@@ -58,7 +58,7 @@ for setNum = 1:size(paramSet,1)
     agentParameters    = paramSet(setNum,5:18);
     obstacleParameters = paramSet(setNum,19:22);
     
-    folderName = ['Data4\ParameterSet',num2str(setNum)];
+    folderName = ['Data5\ParameterSet',num2str(setNum)];
     
     if ~exist(folderName,'dir')
         mkdir(folderName);
@@ -75,7 +75,7 @@ for setNum = 1:size(paramSet,1)
 
         % Save the outputs
         fileName = ['ParameterSet',num2str(setNum),'\Rep',num2str(repNum)];
-        save(['Data4\',fileName,'.mat'],'agent','goalReachTime','environment','simParameters','agentParameters','obstacleParameters')    
+        save(['Data5\',fileName,'.mat'],'agent','goalReachTime','environment','simParameters','agentParameters','obstacleParameters')    
         
         % Store the outputs in cells
 %         grt{run} = goalReachTime;

@@ -5,6 +5,7 @@ function stateListNew = agentAction3(stateList, params, actionInput)
     stepTime = params.stepTime;
     turnRate = params.turnRate;
 
+    obstacleType = params.obstacleType;
     obstacleCenter = params.obstacleCenter;
     obstacleRadius = params.obstacleRadius;
 
@@ -55,67 +56,69 @@ function stateListNew = agentAction3(stateList, params, actionInput)
     distLim = 0.9*params.obstacleDistance^2;
 
     %% Check for wall collission
-    for currAgent = 1:numberOfAgents
-        rad12 = ((agentX(currAgent) - obstacleCenter(1))^2 + (agentY(currAgent)- obstacleCenter(2))^2); % Find squared distance from obstacle center
-        rad22 = ((newX(currAgent) - obstacleCenter(1))^2 + (newY(currAgent) - obstacleCenter(2))^2); % Find squared distance from obstacle center
+    
+    if obstacleType == 3 % Arc type obstacle
+        for currAgent = 1:numberOfAgents
+            rad12 = ((agentX(currAgent) - obstacleCenter(1))^2 + (agentY(currAgent)- obstacleCenter(2))^2); % Find squared distance from obstacle center
+            rad22 = ((newX(currAgent) - obstacleCenter(1))^2 + (newY(currAgent) - obstacleCenter(2))^2); % Find squared distance from obstacle center
 
-        % Check to see that we are not in the part of the circle without the obstacle
-        if(~(agentY(currAgent) < obsMinY && newY(currAgent) < obsMinY))
-        % Case 1: old and new position are on oppositte sides of the obstacle
-            if ((rad12 - obstacleRadius^2)*(rad22 - obstacleRadius^2) < 0)
-               % also, you don't want to freeze the agent in place too far away, or it may be stuck beyond the range of sensing the obstacle; instead you want it to advance until it's close to the obstacle
-               % the right way to do this is to calculate the intersection point, see how far along the line segment it is, and pick a new point just short of that, but I'm tired and am just going to kluge something awful
-              if abs(rad12 - obstacleRadius^2) < distLim  % don't keep advancing when you're close enough
-                newX(currAgent) = agentX(currAgent); 
-                newY(currAgent) = agentY(currAgent);
-              else
-                p1x = agentX(currAgent);
-                p1y = agentY(currAgent);
-
-                p2x = newX(currAgent);
-                p2y = newY(currAgent);
-
-                while (p2x-p1x)^2 + (p2y-p1y)^2 > distLim
-                  p3x = p1x + (p2x-p1x)/2; 
-                  p3y = p1y + (p2y-p1y)/2;
-
-                  rad12 = (p1x - obstacleCenter(1))^2 + (p1y  - obstacleCenter(2))^2; 
-                  rad22 = (p2x - obstacleCenter(1))^2 + (p2y  - obstacleCenter(2))^2; 
-                  rad32 = (p3x - obstacleCenter(1))^2 + (p3y  - obstacleCenter(2))^2;
-
-                  if rad12 > obstacleRadius^2
-                    if rad32 > obstacleRadius^2
-                        p1x = p3x;
-                        p1y = p3y;
-                    else
-                        p2x = p3x;
-                        p2y = p3y;
-                    end
+            % Check to see that we are not in the part of the circle without the obstacle
+            if(~(agentY(currAgent) < obsMinY && newY(currAgent) < obsMinY))
+            % Case 1: old and new position are on oppositte sides of the obstacle
+                if ((rad12 - obstacleRadius^2)*(rad22 - obstacleRadius^2) < 0)
+                   % also, you don't want to freeze the agent in place too far away, or it may be stuck beyond the range of sensing the obstacle; instead you want it to advance until it's close to the obstacle
+                   % the right way to do this is to calculate the intersection point, see how far along the line segment it is, and pick a new point just short of that, but I'm tired and am just going to kluge something awful
+                  if abs(rad12 - obstacleRadius^2) < distLim  % don't keep advancing when you're close enough
+                    newX(currAgent) = agentX(currAgent); 
+                    newY(currAgent) = agentY(currAgent);
                   else
-                    if rad32 < obstacleRadius^2
-                        p1x = p3x;
-                        p1y = p3y;
-                    else
-                        p2x = p3x;
-                        p2y = p3y;
+                    p1x = agentX(currAgent);
+                    p1y = agentY(currAgent);
+
+                    p2x = newX(currAgent);
+                    p2y = newY(currAgent);
+
+                    while (p2x-p1x)^2 + (p2y-p1y)^2 > distLim
+                      p3x = p1x + (p2x-p1x)/2; 
+                      p3y = p1y + (p2y-p1y)/2;
+
+                      rad12 = (p1x - obstacleCenter(1))^2 + (p1y  - obstacleCenter(2))^2; 
+                      rad22 = (p2x - obstacleCenter(1))^2 + (p2y  - obstacleCenter(2))^2; 
+                      rad32 = (p3x - obstacleCenter(1))^2 + (p3y  - obstacleCenter(2))^2;
+
+                      if rad12 > obstacleRadius^2
+                        if rad32 > obstacleRadius^2
+                            p1x = p3x;
+                            p1y = p3y;
+                        else
+                            p2x = p3x;
+                            p2y = p3y;
+                        end
+                      else
+                        if rad32 < obstacleRadius^2
+                            p1x = p3x;
+                            p1y = p3y;
+                        else
+                            p2x = p3x;
+                            p2y = p3y;
+                        end
+                      end
                     end
+
+                    newX(currAgent) = p1x;
+                    newY(currAgent) = p1y;
                   end
+                % also also, if you're moving slowly enough to keep getting closer to the obstacle, don't get too close
+
+                % Case 2: Old and new position are on the same side of the obstacle
+                elseif ((rad12<obstacleRadius^2 && rad22<obstacleRadius^2 && rad12<rad22 && abs(rad12-obstacleRadius^2)<.75)...
+                     || (rad12 > obstacleRadius^2 && rad22 > obstacleRadius^2 && rad12 > rad22 && abs(rad12-obstacleRadius^2)<.75))
+                  newX(currAgent) = agentX(currAgent); 
+                  newY(currAgent) = agentY(currAgent);
                 end
-
-                newX(currAgent) = p1x;
-                newY(currAgent) = p1y;
-              end
-            % also also, if you're moving slowly enough to keep getting closer to the obstacle, don't get too close
-
-            % Case 2: Old and new position are on the same side of the obstacle
-            elseif ((rad12<obstacleRadius^2 && rad22<obstacleRadius^2 && rad12<rad22 && abs(rad12-obstacleRadius^2)<.75)...
-                 || (rad12 > obstacleRadius^2 && rad22 > obstacleRadius^2 && rad12 > rad22 && abs(rad12-obstacleRadius^2)<.75))
-              newX(currAgent) = agentX(currAgent); 
-              newY(currAgent) = agentY(currAgent);
             end
-        end
-    end
-
+        end 
+    end   
     % Apply a one step euler integral
     stateListNew = stateList + stepTime.*dStateList;
     stateListNew(1:numberOfAgents) = newX;

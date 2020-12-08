@@ -10,9 +10,9 @@ clc; close all; clear;
 
 %% Define sim parameters
 % Model being used
-modelSelection = 2; % 0 = Couzin et al, fixed radii; 1 = Calovi et al 2018, gaussian att/ali functions; 2 = burst-and-coast modification of 1
+modelSelection = 0; % 0 = Couzin et al, fixed radii; 1 = Calovi et al 2018, gaussian att/ali functions; 2 = burst-and-coast modification of 1
 % Simulation parameters
-totalSimulationTime = 1000; % How long does the simulation run?
+totalSimulationTime = 300; % How long does the simulation run?
 simStepTime = 0.01; % Step time for each loop of the simulation
 
 %% Define agent parameters
@@ -55,7 +55,7 @@ obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
 obstacleVisibility = 1; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
 
 % Agent dynamics
-turnRate = inf; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
+turnRate = 2; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
 agentSpeed = 1; % How fast do agents move?
 noiseDegree = 0; % How noisy is the agent motion from step to step
 
@@ -66,14 +66,14 @@ attractWeight = 1;
 obstacleWeight = 1;
 
 % Obstacle parameters
-obstacleType = 3;    % convex arc = 1, wall = 2, or concave arc = 3, otherwise nothing
+obstacleType = 2;    % box = 1, wall = 2, arc = 3 ,arrowhead = 4
 obstacleScale = 15;  % length scale of obstacle
 arcLength = pi*7.5;  % length of the obstacle arc in length units (regardless of angle & radius)
 arcRadius = 7.5; % radius of the arc (position stays the same)
 arcAngle = arcLength/arcRadius; % how many degrees should arc obstacles cover?
 gapSize = 0;         % size of gap in the middle of the wall
 
-obstacleCenter = [0,11.25]; % The center for the obstacle
+obstacleCenter = [0,20]; % The center for the obstacle
 
 % What are the initial states of the agents?
 initialPositionX = (5+5).*rand(numberOfAgents,1) - 5; % m
@@ -124,13 +124,14 @@ obstacleX = [];
 obstacleY = [];
 
 switch obstacleType
-    % make convex arc obstacle
+    % make box obstacle
     case 1
-        arcRadius = obstacleScale/2;
-        obstacleCenter = [obstacleCenter(1), obstacleCenter(2)];
-        obstacle = obstArc(obstacleCenter(1),obstacleCenter(2),...
-                           arcRadius,(pi/2)+(arcAngle/2),(pi/2)-(arcAngle/2),obstacleSpacing);
-    
+        x1 = obstacleCenter(1) - obstacleScale/2;
+        y1 = obstacleCenter(2);
+        x2 = obstacleCenter(1) + obstacleScale/2;
+        y2 = obstacleCenter(2);
+        obstacle = obstBox(x1, y1, x2, y2, obstacleSpacing, gapSize);
+        
     % make wall obstacle
     case 2
         x1 = obstacleCenter(1) - obstacleScale/2;
@@ -138,13 +139,29 @@ switch obstacleType
         x2 = obstacleCenter(1) + obstacleScale/2;
         y2 = obstacleCenter(2);
         obstacle = obstLine(x1, y1, x2, y2, obstacleSpacing, gapSize);
-    
+        
     % make concave arc obstacle
     case 3
-        arcRadius = obstacleScale/2;
-        obstacleCenter = [obstacleCenter(1), obstacleCenter(2)];
+        obstacleCenter = [obstacleCenter(1), obstacleCenter(2) - ...
+                            arcRadius/2];
         obstacle = obstArc(obstacleCenter(1),obstacleCenter(2),...
                            arcRadius,(pi/2)-(arcAngle/2),(pi/2)+(arcAngle/2),obstacleSpacing);
+
+    % make arrowhead obstacle
+    case 4
+        x1 = obstacleCenter(1) - obstacleScale/2;
+        y1 = obstacleCenter(2) - obstacleScale/2;
+        x2 = obstacleCenter(1);
+        y2 = obstacleCenter(2);
+        obstacleLeft = obstLine(x1, y1, x2, y2, obstacleSpacing, gapSize);
+
+        x1 = obstacleCenter(1);
+        y1 = obstacleCenter(2);
+        x2 = obstacleCenter(1) + obstacleScale/2;
+        y2 = obstacleCenter(2) - obstacleScale/2;
+        obstacleRight = obstLine(x1, y1, x2, y2, obstacleSpacing, gapSize);
+
+        obstacle = [obstacleLeft; obstacleRight];
     otherwise
         obstacle = [];
 end
@@ -154,6 +171,7 @@ if ~isempty(obstacle)
     obstacleY = obstacle(:,2);
 end
 
+% Store the obstacle
 obstacleLocations = [obstacleX(:), obstacleY(:)];
                  
 %% Plot the obstacle
@@ -191,6 +209,7 @@ params.obstacleLocations = obstacleLocations;
 
 params.agentLength = agentLength;
 
+params.obstacleType = obstacleType;
 params.obstacleSpacing = obstacleSpacing;
 params.obstacleCenter = obstacleCenter;
 params.obstacleRadius = arcRadius;

@@ -11,7 +11,7 @@ listX = x1:xSpacing:x2;
 listY = y1:ySpacing:y2;
 
 % Check for empty lists and nans
-if isnan(listX) && isnan(listY)  % start and end points coincide
+if isnan(listX) & isnan(listY)  % start and end points coincide
     obstacleLocations = [x1 y1];    
 elseif length(listX) == length(listY)  % the obstacle is either a single point or a diagonal line
     obstacleLocations = [listX' listY'];    
