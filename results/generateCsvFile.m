@@ -1,27 +1,7 @@
-% Read Param sweep data and make some plots
-
-% Parameter info:
-% simParameters is a 4 parameter vector consisting of 
-%   1) Model type - 0 Couzin 1 calovi
-%   2) Total simulation time in seconds
-%   3) Step time for the simulation in seconds
-%   4) Step time for the agent update
-% agentParameters is a 14 parameter vector consisting of 
-%   1) Number of agents
-%   2) Number of neighbours for each agent
-%   3) Fraction of informed agents
-%   4 - 9) avoid radius, align radius, attract radius, align Y intercept,
-%          obstacle radius, obstacle visibility range
-%   10) Turn rate
-%   11 - 14) avoid weight, align weight, attract weight, obstacle weight
-% obstacleParameters is a 4 parameter vector consisting of 
-%   1) Obstacle type - 1 Convex, 2 Wall, 3 Concave
-%   2) Obstacle scale - The diameter/length of the obstacle
-%   3) Obstacle arc - The angular range of a convex/concave obstacle
-%   4) Gap size - The size of the gap in the middle of the obstacle
-
+% Read the parameters sweep data, and generate tables with the processed
+% information.
 % Where is the data located?
-topDir = '/Users/helen/Documents/JSMFpostdoc/projects/collectiveMovementAndObstacles/Obstacle-avoiding-agents/data/data20201020';
+topDir = 'C:\Users\Varun\Documents\GitHub\Obstacle-avoiding-agents\Data5';
 
 % Find all the folders
 folderList = dir([topDir,'/Parameter*']);
@@ -31,25 +11,25 @@ dataTable = table;
 goalReachTimeTable = table;
 
 % Initialize processing parameters
-        % Want to record the number of agents that get below a certain
-        % y value (sufficiently below obstacle) AFTER the group has
-        % hit the obstacle.
-        % The group always hits the obstacle around timepoint 2,000.
-        % (Making the threshold 2,800 instead of less reduces chance agents
-        % will still be lower than y threshold, seems to just be an 
-        % issue for high avoid radius.
-        % The y-midpoint of the obstacle is around 20, and the lowest
-        % points are around 15. Have chosen 12 as the y threshold. This
-        % seems to capture the majority of backwards movements, but there
-        % is a tradeoff btw false positives and false negatives.
-        % After the group hits the obstacle, any agents that get below
-        % y = 13 have gone backwards. 
-        % Should do a manual spotcheck to classify simulations with
-        % high avoid radius, as these are still prone to classification
-        % errors.
-
+% Want to record the number of agents that get below a certain
+% y value (sufficiently below obstacle) AFTER the group has
+% hit the obstacle.
+% The y-midpoint of the obstacle is around 20, and the lowest
+% points are around 15. Have chosen 12 as the y threshold. This
+% seems to capture the majority of backwards movements, but there
+% is a tradeoff btw false positives and false negatives.
+% After the group hits the obstacle, any agents that get below
+% y = 13 have gone backwards. 
+% Should do a manual spotcheck to classify simulations with
+% high avoid radius, as these are still prone to classification
+% errors.
 yThresholdLow = 12;
 yThresholdHigh = 25;
+
+% The group always hits the obstacle around timepoint 2,000.
+% Making the threshold 2,800 instead of less reduces chance agents
+% will still be lower than y threshold, seems to just be an 
+% issue for high avoid radius.
 timeThreshold = 2800;
 
 % Loop through the folders
@@ -96,8 +76,6 @@ for paramSet = 1:length(folderList)
            end
         end
         
-        
-
         % Put things in a local table
         currTable = table;
         currGoalReachTimes = table;
@@ -113,6 +91,7 @@ for paramSet = 1:length(folderList)
         
         % currTable.GoalTimes = goalReachTime(:)';
         currTable.Model = simParameters(1);
+        currTable.ObstacleType = obstacleParameters(1);
         currTable.AgentStepTime = simParameters(4);
         currTable.NumAgents = agentParameters(1);
         currTable.Neighbors = agentParameters(2);
@@ -134,9 +113,10 @@ for paramSet = 1:length(folderList)
         currTable.SuccessRate = sum(~isnan(goalReachTime))/length(goalReachTime);
         currTable.NumMovedBackwards = numBackwards;
         currTable.NumEscaped = numEscaped;
-        
+                
         currGoalReachTimes.Model = repelem(simParameters(1),agentParameters(1))';
         currGoalReachTimes.AgentStepTime = repelem(simParameters(4), agentParameters(1))';
+        currGoalReachTimes.ObstacleType = repelem(obstacleParameters(1),agentParameters(1))';
         currGoalReachTimes.NumAgents = repelem(agentParameters(1), agentParameters(1))';
         currGoalReachTimes.Neighbors = repelem(agentParameters(2), agentParameters(1))';
         currGoalReachTimes.FractionInformed = repelem(agentParameters(3), agentParameters(1))'; 
@@ -164,66 +144,64 @@ for paramSet = 1:length(folderList)
 end
 
 %% Write table to file
-filename = 'summaryData20201020.csv';
+filename = 'summaryData20201204.csv';
 writetable(dataTable,filename);
 
-filename2 = 'goalTimesData20201020.csv';
+filename2 = 'goalTimesData20201204.csv';
 writetable(goalReachTimeTable,filename2);
 
 %% Separately make an image of each simulation's trajectories
-% Where is the data located?
-topDir = '/Users/helen/Documents/JSMFpostdoc/projects/collectiveMovementAndObstacles/Obstacle-avoiding-agents/data/data20201020';
-
-% Find all the folders
-folderList = dir([topDir,'/Parameter*']);
-
-
-% Loop through the folders
-for paramSet = 1:length(folderList)
-    % Select the current folder
-    currFolder = [folderList(paramSet).folder,'/',folderList(paramSet).name];    
-    
-    % Find all the repetitions
-    fileList = dir([currFolder,'/Rep*.mat']);
-    
-    % Loop through the repetitions
-    for currRep = 1:length(fileList) 
-        
-        % Select the current file
-        currFile = [fileList(currRep).folder,'/',fileList(currRep).name]; 
-       
-        % Load the file
-        load(currFile);
-        
-        % Name the path for the image to be saved
-        imageFilename = [fileList(currRep).folder,'/figs/Rep',num2str(currRep),'.png'];
-
-        
-        numberOfAgents = agentParameters(1);
-
-        figure('visible','off')
-
-        agentsXOut = agent.statesList(1:numberOfAgents,:)';
-        agentsYOut = agent.statesList(numberOfAgents + 1: 2*numberOfAgents,:)';
-        agentsSpeedOut = agent.statesList(2*numberOfAgents + 1: 3*numberOfAgents,:)';
-        agentsOrientationOut = agent.statesList(3*numberOfAgents + 1 :end,:)';
-
-        plot(agentsXOut, agentsYOut);
-        hold on
-        plot(environment.obstacleLocations(:,1), environment.obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
-        %plot(environment.goalLocations(:,1), environment.goalLocations(:,2), 'bo','MarkerFaceColor','b') 
-        plot([-50,50], [environment.goalLocations(:,2) - 1000,environment.goalLocations(:,2) - 1000] , 'b-')
-        hold off
-
-        xlabel('Agent x position')
-        ylabel('Agent y position')
-        title('Agent world')
-
-        axis equal
-        axisLimits.X = get(gca, 'xlim');
-        axisLimits.Y = get(gca, 'ylim');
-        saveas(gcf,imageFilename)
-
-        
-    end
-end
+% % Where is the data located?
+% topDir = '/Users/helen/Documents/JSMFpostdoc/projects/collectiveMovementAndObstacles/Obstacle-avoiding-agents/data/data20201020';
+% 
+% % Find all the folders
+% folderList = dir([topDir,'/Parameter*']);
+% 
+% 
+% % Loop through the folders
+% for paramSet = 1:length(folderList)
+%     % Select the current folder
+%     currFolder = [folderList(paramSet).folder,'/',folderList(paramSet).name];    
+%     
+%     % Find all the repetitions
+%     fileList = dir([currFolder,'/Rep*.mat']);
+%     
+%     % Loop through the repetitions
+%     for currRep = 1:length(fileList) 
+%         
+%         % Select the current file
+%         currFile = [fileList(currRep).folder,'/',fileList(currRep).name]; 
+%        
+%         % Load the file
+%         load(currFile);
+%         
+%         % Name the path for the image to be saved
+%         imageFilename = [fileList(currRep).folder,'/figs/Rep',num2str(currRep),'.png'];
+% 
+%         
+%         numberOfAgents = agentParameters(1);
+% 
+%         figure('visible','off')
+% 
+%         agentsXOut = agent.statesList(1:numberOfAgents,:)';
+%         agentsYOut = agent.statesList(numberOfAgents + 1: 2*numberOfAgents,:)';
+%         agentsSpeedOut = agent.statesList(2*numberOfAgents + 1: 3*numberOfAgents,:)';
+%         agentsOrientationOut = agent.statesList(3*numberOfAgents + 1 :end,:)';
+% 
+%         plot(agentsXOut, agentsYOut);
+%         hold on
+%         plot(environment.obstacleLocations(:,1), environment.obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
+%         %plot(environment.goalLocations(:,1), environment.goalLocations(:,2), 'bo','MarkerFaceColor','b') 
+%         plot([-50,50], [environment.goalLocations(:,2) - 1000,environment.goalLocations(:,2) - 1000] , 'b-')
+%         hold off
+% 
+%         xlabel('Agent x position')
+%         ylabel('Agent y position')
+%         title('Agent world')
+% 
+%         axis equal
+%         axisLimits.X = get(gca, 'xlim');
+%         axisLimits.Y = get(gca, 'ylim');
+%         saveas(gcf,imageFilename)       
+%     end
+% end

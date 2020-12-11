@@ -242,7 +242,7 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
         % Run perception and decision  steps for each agent
         for currAgent = 1:numberOfAgents
             if modelSelection == 0 || modelSelection == 1  % Couzin and Calovi variants
-                if (mod(length(timeList), numStepsPerUpdate(currAgent)) == 0)
+                if (mod(length(timeList), numStepsPerUpdate) == 0)
                     % run the perception step and update decision input
                     decisionInput = agentPerception3(currAgent, statesNow, params);
 

@@ -80,7 +80,8 @@ ggplot(goalTimesData,
 
 dataMeans <- group_by(data, SetNum) %>%
   summarize (., RealSetNum = RealSetNum[1], RealRepNum = RealRepNum[1],
-             Model = Model[1], AgentStepTime = AgentStepTime[1], 
+             Model = Model[1], AgentStepTime = AgentStepTime[1],
+             ObstacleType = ObstacleType[1],
              NumAgents = NumAgents[1], Neighbors = Neighbors[1], 
              FractionInformed = FractionInformed[1], 
              AvoidRadius = AvoidRadius[1], AlignRadius = AlignRadius[1],
@@ -96,7 +97,8 @@ dataMeans <- group_by(data, SetNum) %>%
 
 persistenceData <- 
   group_by (goalTimesData, RealSetNum, RealRepNum) %>%
-  summarize (., RepNum = RepNum[1], Model = Model[1], AgentStepTime = AgentStepTime[1], 
+  summarize (., RepNum = RepNum[1], Model = Model[1], AgentStepTime = AgentStepTime[1],
+             ObstacleType = ObstacleType[1],
              NumAgents = NumAgents[1], Neighbors = Neighbors[1], 
              FractionInformed = FractionInformed[1], 
              AvoidRadius = AvoidRadius[1], AlignRadius = AlignRadius[1],
@@ -114,7 +116,8 @@ persistenceData <-
              meanPersX = mean(extremeXs[wasCaught == 1]))
 
 persistenceMeans <- group_by(persistenceData, RealSetNum) %>%
-  summarize (., Model = Model[1], AgentStepTime = AgentStepTime[1], 
+  summarize (., Model = Model[1], AgentStepTime = AgentStepTime[1],
+             ObstacleType = ObstacleType[1],
              NumAgents = NumAgents[1], Neighbors = Neighbors[1], 
              FractionInformed = FractionInformed[1], 
              AvoidRadius = AvoidRadius[1], AlignRadius = AlignRadius[1],
