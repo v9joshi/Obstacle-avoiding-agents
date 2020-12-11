@@ -150,7 +150,6 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
             x2 = obstacleCenter(1) + obstacleScale/2;
             y2 = obstacleCenter(2);
             obstacle = obstLine(x1, y1, x2, y2, obstacleSpacing, gapSize);
-            
         % make concave arc obstacle
         case 3
             obstacleCenter = [obstacleCenter(1), obstacleCenter(2) - ...
