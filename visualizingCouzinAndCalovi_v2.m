@@ -1,5 +1,5 @@
 % Visualizing Couzin vs Calovi models
-% close all;
+close all;
 % Define some agents
 agentDistance = 0:0.01:30;
 
@@ -20,10 +20,12 @@ relativeAgentAngle = pi/2;
 relativeAgentOrientation = [cos(relativeAgentAngle); sin(relativeAgentAngle)];
 
 % What are the constants being used
-avoidDistance = 5;
-alignDistance = 10;
-attractDistance = 20;
-alignYintercept = 0.6;
+avoidDistance = 1;
+alignDistance = 5;
+attractDistance = 10;
+alignYintercept = 1;
+obstacleDistance = 1;
+obstacleVisibility = 1;
 
 agentWeights.Avoidance = 1;
 agentWeights.Attraction = 1;
@@ -34,8 +36,9 @@ agentWeights.Destination = 1;
 % Couzin on off switch
 attractionCouzin = ones(length(agentDistance),1)*agentWeights.Attraction;
 % attractionCouzin(agentDistance <= alignDistance & agentDistance >= avoidDistance) = 0;
-attractionCouzin(agentDistance > attractDistance) = 0;
+attractionCouzin(agentDistance < alignDistance) = 0;
 attractionCouzin(agentDistance < avoidDistance) = -1*agentWeights.Avoidance;
+attractionCouzin(agentDistance > attractDistance) = 0;
 
 alignmentCouzin = zeros(length(agentDistance),1);
 alignmentCouzin(agentDistance <= alignDistance & agentDistance >= avoidDistance) = agentWeights.Alignment;
@@ -54,12 +57,27 @@ for currDist = 1:length(agentDistance)
     desiredOrientationCouzin(currDist) = atan2(normalizedSum(2), normalizedSum(1));
 end
 
+% Continous model
+forcesOfRep = -(agentDistance-avoidDistance).^agentWeights.Avoidance;
+forcesOfRep(agentDistance > avoidDistance) = 0;
+    
+forcesOfAtt = agentWeights.Attraction - (agentWeights.Attraction/attractDistance^2)*(agentDistance - (avoidDistance+attractDistance)).^2;
+forcesOfAtt(agentDistance<avoidDistance) = 0;
+%forcesOfAtt(agentDistance>attractDistance) = 0;
+
+
+forcesOfAlign = agentWeights.Alignment - (agentWeights.Alignment/alignDistance)*(agentDistance - avoidDistance).^2;
+forcesOfAlign(forcesOfAlign<0) = 0;
+
+% Get repelled by obstacles. Exponentially more the closer you are
+% forcesOfObsRep = (1./distanceFromObsLocations)./obstacleSize;
+    
 % Calovi non-linear model
 attractionCalovi = (agentDistance - avoidDistance)./(1+(agentDistance/attractDistance).^2);
-attractionCalovi = agentWeights.Attraction*attractionCalovi;%(attractDistance - avoidDistance);
+attractionCalovi = agentWeights.Attraction*attractionCalovi/(attractDistance - avoidDistance);
 
 alignmentCalovi = (alignYintercept + agentDistance).*exp(-(agentDistance/alignDistance).^2);
-alignmentCalovi = agentWeights.Alignment*alignmentCalovi;%/(alignDistance + alignYintercept);
+alignmentCalovi = agentWeights.Alignment*alignmentCalovi/(alignDistance + alignYintercept);
 
 destinationCalovi =  agentWeights.Destination;
 
@@ -128,3 +146,34 @@ ylim(ylimitVal);
 ylabel(['Desired change in orientation (', char(176) ,')'])
 xlabel('Distance from other agent')
 title('Agent desired orientation')
+%%
+figure(2)
+cal_Att = plot(agentDistance,attractionCalovi,'r');
+hold on
+couz_Att = plot(agentDistance, attractionCouzin,'r--');
+cal_Algn = plot(agentDistance,alignmentCalovi,'b');
+couz_Algn = plot(agentDistance,alignmentCouzin,'b--');
+
+legend([cal_Att, couz_Att, cal_Algn, couz_Algn] ,'Attraction weight (calovi)','Attraction weight (zonal)','Alignment weight (calovi)','Alignment weight (zonal)')
+ylim([-3,3])
+xlim([0,35])
+
+ylabel('Behavior weight')
+xlabel('Distance between agents')
+
+figure(3)
+hold on
+cont_Att = plot(agentDistance,-forcesOfRep,'r');
+plot(agentDistance, forcesOfAtt,'r')
+couz_Att = plot(agentDistance, attractionCouzin,'r--');
+cont_Algn = plot(agentDistance, forcesOfAlign,'b');
+couz_Algn = plot(agentDistance, alignmentCouzin,'b--');
+
+ylim([-1.5,1.5])
+xlim([0,24])
+
+legend([cont_Att, couz_Att, cont_Algn, couz_Algn] ,'Attraction weight (continuous)','Attraction weight (zonal)','Alignment weight (continuous)','Alignment weight (zonal)')
+
+ylabel('Behavior weight')
+xlabel('Distance between agents')
+

@@ -1,7 +1,7 @@
 % Read the parameters sweep data, and generate tables with the processed
 % information.
 % Where is the data located?
-topDir = 'C:\Users\Varun\Documents\GitHub\Obstacle-avoiding-agents\Data5';
+topDir = 'C:\Users\Varun\Documents\GitHub\Obstacle-avoiding-agents\Data7';
 
 % Find all the folders
 folderList = dir([topDir,'/Parameter*']);
@@ -144,10 +144,10 @@ for paramSet = 1:length(folderList)
 end
 
 %% Write table to file
-filename = 'summaryData20201204.csv';
+filename = 'summaryData20210203.csv';
 writetable(dataTable,filename);
 
-filename2 = 'goalTimesData20201204.csv';
+filename2 = 'goalTimesData20210203.csv';
 writetable(goalReachTimeTable,filename2);
 
 %% Separately make an image of each simulation's trajectories

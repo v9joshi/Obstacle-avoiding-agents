@@ -258,7 +258,8 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
                     decisionInput = agentPerception3(currAgent, statesNow, params);
                     
                     % run the decision step and update action input
-                    actionInput = agentDecisionCalovi(currAgent, params, decisionInput, actionInput);
+%                     actionInput = agentDecisionCalovi(currAgent, params, decisionInput, actionInput);
+                    actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
                     actionInput.desiredSpeed(currAgent) = agentSpeed;
                     
                     % now set the next time when you'll burst again:

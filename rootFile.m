@@ -39,7 +39,7 @@ end
 numberOfNeighbors = 7;
 
 % How many agents know the destination?
-fractionInformed = 1;
+fractionInformed = 0.1;
 informedAgents = round(fractionInformed*numberOfAgents);
 listOfInformedAgents = randsample(numberOfAgents, informedAgents);
 listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
@@ -61,12 +61,12 @@ noiseDegree = 0; % How noisy is the agent motion from step to step
 
 % Agent social weights
 avoidWeight = 1;
-alignWeight = 7;
+alignWeight = 0.1;
 attractWeight = 1;
 obstacleWeight = 1;
 
 % Obstacle parameters
-obstacleType = 2;    % box = 1, wall = 2, arc = 3 ,arrowhead = 4
+obstacleType = 3;    % box = 1, wall = 2, arc = 3 ,arrowhead = 4
 obstacleScale = 15;  % length scale of obstacle
 arcLength = pi*7.5;  % length of the obstacle arc in length units (regardless of angle & radius)
 arcRadius = 7.5; % radius of the arc (position stays the same)

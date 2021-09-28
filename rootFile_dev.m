@@ -6,13 +6,17 @@
 % collide with each other.
 
 % Clear and close everything
-clc; close all; clear;
+% clc; close all; clear;
+
+function [agentTurnRadius, agentTurnCurvature] = rootFile_dev(alignWeight)
+
+% alignWeight = 50;
 
 %% Define sim parameters
 % Model being used
 modelSelection = 0; % 0 = Couzin et al, fixed radii; 1 = Calovi et al 2018, gaussian att/ali functions; 2 = burst-and-coast modification of 1
 % Simulation parameters
-totalSimulationTime = 500; % How long does the simulation run?
+totalSimulationTime = 250; % How long does the simulation run?
 simStepTime = 0.01; % Step time for each loop of the simulation
 
 %% Define agent parameters
@@ -61,7 +65,7 @@ noiseDegree = 0; % How noisy is the agent motion from step to step
 
 % Agent social weights
 avoidWeight = 1;
-alignWeight = 1;
+% alignWeight = 1;
 attractWeight = 1;
 obstacleWeight = 1;
 
@@ -76,8 +80,10 @@ gapSize = 0;         % size of gap in the middle of the wall
 obstacleCenter = [0,15]; % The center for the obstacle
 
 % What are the initial states of the agents?
-initialPositionX = (5+5).*rand(numberOfAgents,1) - 5; % m
-initialPositionY = (5+5).*rand(numberOfAgents,1); % m
+initialPositionX = (2).*rand(numberOfAgents,1) - 5; % m
+initialPositionY = (2).*rand(numberOfAgents,1) - 5; % m
+% initialPositionX = ;%[-0.5, 0, 0.5,-0.5, 0, 0.5,-0.5, 0, 0.5]'; % m
+% initialPositionY = ;%[-0.5,-0.5,-0.5,0, 0, 0, 0.5, 0.5, 0.5]'; % m
 initialSpeed = agentSpeed*ones(numberOfAgents, 1); % m/s
 initialOrientation = pi/2*ones(numberOfAgents, 1); % radians
 
@@ -225,8 +231,11 @@ while timeList(end) < totalSimulationTime
         if modelSelection == 0 || modelSelection == 1
             if (mod(length(timeList), numStepsPerUpdate(currAgent)) == 0)
               % run the perception step and update decision input
-              decisionInput = agentPerception3_dev(currAgent, statesNow, params);
-
+              if timeNow > 20 
+                  decisionInput = agentPerception3_dev(currAgent, statesNow, params);
+              else
+                  decisionInput = agentPerception3(currAgent, statesNow, params);
+              end
               % run the decision step and update action input
               if modelSelection == 1 % Gaussian curves rather than radii
                 actionInput = agentDecisionContin(currAgent, params, decisionInput, actionInput);
@@ -290,10 +299,10 @@ while timeList(end) < totalSimulationTime
 end
 
 % Output number of successful agents
-display([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
-display(['minimum time to goal: ', num2str(min(goalReachTime))]);
-display(['maximum time to goal: ', num2str(max(goalReachTime))]);
-display(['median time to goal: ', num2str(nanmedian(goalReachTime))]);
+% display([num2str(sum(destinationReached)),' out of ', num2str(numberOfAgents), ' successfully reached the destination']);
+% display(['minimum time to goal: ', num2str(min(goalReachTime))]);
+% display(['maximum time to goal: ', num2str(max(goalReachTime))]);
+% display(['median time to goal: ', num2str(nanmedian(goalReachTime))]);
 
 %% Unpack output states
 agentsXOut = statesList(1:numberOfAgents,:)';
@@ -301,12 +310,11 @@ agentsYOut = statesList(numberOfAgents + 1: 2*numberOfAgents,:)';
 agentsSpeedOut = statesList(2*numberOfAgents + 1: 3*numberOfAgents,:)';
 agentsOrientationOut = statesList(3*numberOfAgents + 1 :end,:)';
 
-%% Plot and output some data
-figure(1)
+% Plot and output some data
+figure(4)
 plot(agentsXOut, agentsYOut);
 hold on
 plot(obstacleLocations(:,1), obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
-plot([-50,50], [goalLocations(:,2) - 1000,goalLocations(:,2) - 1000] , 'b-')
 hold off
 
 xlabel('Agent x position')
@@ -317,7 +325,7 @@ axis equal
 axisLimits.X = get(gca, 'xlim');
 axisLimits.Y = get(gca, 'ylim');
 
-% %% Animate the motion
+%% Animate the motion
 % figure(2)
 % % How large do we want each agent to be
 % semiAgentSize = agentLength/2;
@@ -325,7 +333,7 @@ axisLimits.Y = get(gca, 'ylim');
 % warning('off','arrow:warnlimits')
 % 
 % if modelSelection==0 || modelSelection==1
-%     showStep = 10*numStepsPerUpdate;
+%     showStep = 1000*numStepsPerUpdate;
 % else
 %     showStep = 10;
 % end
@@ -366,17 +374,20 @@ axisLimits.Y = get(gca, 'ylim');
 % end
 
 %% Measure the turn radius
-meanAgentX = mean(agentsXOut(end-1000:end,:),2);
-meanAgentY = mean(agentsYOut(end-1000:end,:),2);
+meanAgentX = mean(agentsXOut(end-10000:end,:),2);
+meanAgentY = mean(agentsYOut(end-10000:end,:),2);
 
-agentTurnRadius = 0.5*(max(meanAgentY) - min(meanAgentY));
+agentTurnRadius = min(0.5*(max(meanAgentX) - min(meanAgentX)), 0.5*(max(meanAgentY) - min(meanAgentY)));
 agentTurnCurvature = 1/agentTurnRadius;
 
-figure(3)
-plot(meanAgentX, meanAgentY);
+figure(5)
+hold on
+plot(meanAgentX - mean(meanAgentX), meanAgentY - mean(meanAgentY));
 axis equal
 
 % * avoidDistance function determined by:
 %   1. simulating different group sizes w/ different avoidDist,
 %   2. determining the avoidDistance which gave a [mean distance to closest neighbor] closest to 1
 %   3. fitting a regression model to the above avoidDistances vs numberOfAgents
+
+end

@@ -48,60 +48,94 @@ mean (filter(data, AlignWeight == 10)$flockingEscape, na.rm = T)
 mean (filter(data, NumAgents == 1)$flockingEscape, na.rm = T)
 mean (filter(data, NumAgents > 1)$flockingEscape, na.rm = T)
 
-summaryData4 <- filter(summaryData, whichParam != "AlignWeight")
+summaryData2 <- filter(summaryData, ObstacleType != 2)
+
+data <- filter(data, ObstacleType != 2)  
 
 # ___________________________
 # Proportion figures
 
 # Adding a column that shows the current value of the varying parameter, as a
 # proportion of the total range of that parameter
-summaryData4$xRangeProp <- rep (NA)
-summaryData4$xValue <- rep (NA)
+summaryData2$xRangeProp <- rep (NA)
+summaryData2$xValue <- rep (NA)
 
-for (i in 1:dim(summaryData4)[1]) {
-  currParam <- summaryData4$whichParam[i]
-  currColumn <- which (colnames(summaryData4) == currParam)
+for (i in 1:dim(summaryData2)[1]) {
+  currParam <- summaryData2$whichParam[i]
+  currColumn <- which (colnames(summaryData2) == currParam)
 
-  minParam <- min (summaryData4[ , currColumn])
-  maxParam <- max (summaryData4[ , currColumn])
+  minParam <- min (summaryData2[ , currColumn])
+  maxParam <- max (summaryData2[ , currColumn])
 
-  currValue <- summaryData4[i, currColumn]
-  currValueProp <- (summaryData4[i, currColumn] - minParam) / (maxParam - minParam)
+  currValue <- summaryData2[i, currColumn]
+  currValueProp <- summaryData2[i, currColumn] # - minParam) / (maxParam - minParam)
+  if(currParam == "ObstacleType"){
+    if(currValueProp > 1){
+      currValueProp = currValueProp - 1
+    }
+  }
 
-  summaryData4$xValue[i] <- pull(currValue)
-  summaryData4$xRangeProp[i] <- pull(currValueProp)
+  summaryData2$xValue[i] <- pull(currValue)
+  summaryData2$xRangeProp[i] <- pull(currValueProp)
 }
 
-ggplot (summaryData4, aes (x = xRangeProp, y = propFlockEscape, 
-                           color = factor(AlignWeight))) +
-geom_point (size = 2, alpha = 1) +
-geom_line (linetype="dashed", size = 1) +
-facet_wrap (~ whichParam, scales = "free_x", ncol = 3) +
-scale_color_manual (values = c("#1b9e77", "#d95f02"), guide = "legend") +
-labs (x = "varying obstacle type", 
+p1 <- ggplot (summaryData2, aes (x = xRangeProp, y = propFlockEscape, 
+                           fill = factor(AlignWeight))) +
+geom_col(width = 0.8, position = position_dodge(width = 0.9), 
+         fill = "#FFFFFF", size = 1,
+         aes(x = xRangeProp, y = 1, color = factor(AlignWeight)))+
+geom_col(width = 0.8, position = position_dodge(width = 0.9))+
+  
+scale_color_manual (values = c("#1b9e77", "#d95f02", "#7570b3"), name = "Align weight",
+                     guide = "none") +
+scale_fill_manual (values = c("#1b9e77", "#d95f02", "#7570b3"), name = "Align weight",
+                   guide = "legend") +
+
+scale_x_discrete(limits = c("Box", "Arc","Arrow"))+
+  
+labs (x = "obstacle type", 
       y = "proportion of simulations with flocking escapes") +
+ylim(0, 1)+
 figTheme
 
-ggplot (summaryData4, aes (x = xRangeProp, y = meanGoalTime, 
-                           color = factor(AlignWeight))) +
-  geom_point (size = 2, alpha = 1) +
-  geom_line (linetype="dashed", size = 1) +
-  facet_wrap (~ whichParam, scales = "free_x", ncol = 3) +
-  scale_color_manual (values = c("#1b9e77", "#d95f02"), guide = "legend") +
-  labs (x = "varying obstacle type", 
-        y = "mean time to reach the goal") +
-  figTheme
+p2 <- ggplot (summaryData2, aes (x = xRangeProp, y = meanGoalTime, 
+                           fill = factor(AlignWeight))) +
+geom_col(position = position_dodge(width = 0.9), size = 1, width = 0.8,
+         aes(color = factor(AlignWeight)))+
+geom_errorbar(aes(x = xRangeProp, 
+              ymin=meanGoalTime - seGoalTime, ymax=meanGoalTime + seGoalTime),
+              colour="black", size = 1, width = 0.2, 
+              position = position_dodge(width = 0.9)) +
+scale_color_manual (values = c("#1b9e77", "#d95f02", "#7570b3"), name = "Align weight",
+                    guide = "none") +
+scale_fill_manual (values = c("#1b9e77", "#d95f02", "#7570b3"), name = "Align weight",
+                   guide = "legend") +
+scale_x_discrete(limits = c("Box", "Arc","Arrow"))+
+labs (x = "obstacle type", 
+      y = "mean time to reach the goal") +
+ylim(0, 300)+
+figTheme
 
-ggplot (summaryData4, aes (x = xRangeProp, y = meanGoalTime, 
-                           color = factor(AlignWeight))) +
-  geom_line (linetype="dashed", size=1) +
-  geom_errorbar(aes(ymin=meanGoalTime - seGoalTime, 
-                    ymax=meanGoalTime + seGoalTime),
-                colour="black", width=0.01, size = 1) +
-  geom_point (size = 2, alpha = 1) +
-  facet_wrap (~ whichParam, scales = "free_x", ncol = 3) +
-  scale_color_manual (values = c("#1b9e77", "#d95f02"), guide = "legend") +
-  labs (x = "varying obstacle type", 
-        y = "mean time to reach the goal") +
-  ylim(0, 300)+
-  figTheme
+
+data$MeanGoalTime[is.na(data$MeanGoalTime)]<-500
+
+#data$ObstacleType[data$ObstacleType == 1]<-"Box"
+data$ObstacleType[data$ObstacleType == 3]<-2
+data$ObstacleType[data$ObstacleType == 4]<-3
+
+#data$ObstacleType <- factor(ObstacleType, labels = c("Box", "Arc","Arrow"))
+
+
+p3<- ggplot(data, aes(x=factor(ObstacleType, labels = c("Box", "Arc","Arrow")), y = MeanGoalTime, 
+       color = factor(AlignWeight))) +
+geom_boxplot(position = "dodge2", fill= "#FFFFFF")+
+scale_color_manual (values = c("#1b9e77", "#d95f02", "#7570b3"), name = "Align weight",
+                      guide = "legend") +
+scale_fill_manual (values = c("#1b9e77", "#d95f02", "#7570b3"), name = "Align weight",
+                   guide = "legend") +
+coord_cartesian(ylim=c(0, 300)) +
+labs (x = "obstacle type", 
+      y = "mean time to reach the goal")+
+figTheme
+
+grid.arrange(p1,p3, nrow = 1)
