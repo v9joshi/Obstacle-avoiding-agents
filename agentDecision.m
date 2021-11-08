@@ -53,7 +53,7 @@ if params.numberOfAgents == 1
                             - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
     end    
 else
-    if isempty(changeInOrientationAvoid) && isempty(relativeObsUnitVector)
+    if isempty(changeInOrientationAvoid) && isempty(relativeObsUnitVector) % if you're not avoiding an agent or obstacle, do everything
         summedUnitVectors = agentWeights.Attraction(currAgent)*sum(changeInOrientationAttract, 1)...
                             + agentWeights.Alignment(currAgent)*sum(changeInOrientationAlign, 1)...
                             + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1);
