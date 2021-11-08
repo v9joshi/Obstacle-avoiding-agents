@@ -1,5 +1,4 @@
 function stateListNew = agentAction3(stateList, params, actionInput)
-
     % unpack parameters
     numberOfAgents = params.numberOfAgents;
     stepTime = params.stepTime;
@@ -12,19 +11,21 @@ function stateListNew = agentAction3(stateList, params, actionInput)
     % unpack the states of the agent
     agentX = stateList(1:numberOfAgents);
     agentY = stateList(numberOfAgents + 1: 2*numberOfAgents);
-    % agentSpeed = stateList(2*numberOfAgents + 1: 3*numberOfAgents);
+    
+    % unpack the action input
     agentSpeed = actionInput.desiredSpeed;
     agentOrientation = stateList(3*numberOfAgents + 1:end);
-
-    % unpack the action input
     desiredOrientation = actionInput.desiredOrientation;
 
-    % Calculate all the derivatives
+    % Calculate all the required derivatives
     dAgentX = agentSpeed.*cos(agentOrientation);
     dAgentY = agentSpeed.*sin(agentOrientation);
+    
+    % Speed is handled without acceleration, just changed instantaneously
     dAgentSpeed = zeros(numberOfAgents, 1); %(actionInput.desiredSpeed - agentSpeed)/stepTime;
     desiredChangeInOrientation = 0*agentOrientation;
 
+    % Determine the correct change in orientation desired
     for currAgent = 1:numberOfAgents
         if abs(agentOrientation(currAgent)) > pi
             agentOrientation(currAgent) = mod(agentOrientation(currAgent) + pi, 2*pi) - pi;
@@ -39,10 +40,14 @@ function stateListNew = agentAction3(stateList, params, actionInput)
 
     dAgentOrientation = min(abs(desiredChangeInOrientation)/stepTime, turnRate).*sign(desiredChangeInOrientation);
 
-    % Store and return derivatives
+    % Store the derivatives
     dStateList = [dAgentX; dAgentY; dAgentSpeed; dAgentOrientation];
-
-    % Where does the agent go?
+    
+    % Apply a one step euler integral
+    stateListNew = stateList + stepTime.*dStateList;
+    
+    %% Check for wall collision
+     % Where does the agent go?
     newX = agentX + stepTime.*dAgentX;
     newY = agentY + stepTime.*dAgentY;
 
@@ -55,8 +60,7 @@ function stateListNew = agentAction3(stateList, params, actionInput)
 
     distLim = 0.9*params.obstacleDistance^2;
 
-    %% Check for wall collission
-    
+    %% Check for wall collision (only works with the arc)
     if obstacleType == 3 % Arc type obstacle
         for currAgent = 1:numberOfAgents
             rad12 = ((agentX(currAgent) - obstacleCenter(1))^2 + (agentY(currAgent)- obstacleCenter(2))^2); % Find squared distance from obstacle center
@@ -64,7 +68,7 @@ function stateListNew = agentAction3(stateList, params, actionInput)
 
             % Check to see that we are not in the part of the circle without the obstacle
             if(~(agentY(currAgent) < obsMinY && newY(currAgent) < obsMinY))
-            % Case 1: old and new position are on oppositte sides of the obstacle
+            % Case 1: old and new position are on opposite sides of the obstacle
                 if ((rad12 - obstacleRadius^2)*(rad22 - obstacleRadius^2) < 0)
                    % also, you don't want to freeze the agent in place too far away, or it may be stuck beyond the range of sensing the obstacle; instead you want it to advance until it's close to the obstacle
                    % the right way to do this is to calculate the intersection point, see how far along the line segment it is, and pick a new point just short of that, but I'm tired and am just going to kluge something awful
@@ -119,8 +123,8 @@ function stateListNew = agentAction3(stateList, params, actionInput)
             end
         end 
     end   
-    % Apply a one step euler integral
-    stateListNew = stateList + stepTime.*dStateList;
+    
+    %% Return the new states
     stateListNew(1:numberOfAgents) = newX;
     stateListNew(numberOfAgents+1: 2*numberOfAgents) = newY;
     stateListNew(2*numberOfAgents+1 : 3*numberOfAgents) = agentSpeed;
