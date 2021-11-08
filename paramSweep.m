@@ -35,7 +35,7 @@ clc; clear; close all;
 %   3) Obstacle arc - The angular range of a convex/concave obstacle
 %   4) Gap size - The size of the gap in the middle of the obstacle
 % Load the parameters
-paramTable = readtable('parameters20201204.csv');
+paramTable = readtable('parameters20210202.csv');
 
 paramSet = [paramTable.modelCalovi, paramTable.totalSimulationTime, paramTable.physicsStepTime, paramTable.agentStepTime,...
             paramTable.numberOfAgents, paramTable.numberOfNeighbors, paramTable.fractionInformed, paramTable.avoidDistance,...
@@ -46,9 +46,10 @@ paramSet = [paramTable.modelCalovi, paramTable.totalSimulationTime, paramTable.p
 
 numReps = 50;
 
+topFolder = 'Data9';
 % Create the data storage folder
-if ~exist('Data5','dir')
-    mkdir('Data5')
+if ~exist(topFolder,'dir')
+    mkdir(topFolder)
 end
 
 % Loop through the param set
@@ -58,7 +59,7 @@ for setNum = 1:size(paramSet,1)
     agentParameters    = paramSet(setNum,5:18);
     obstacleParameters = paramSet(setNum,19:22);
     
-    folderName = ['Data5\ParameterSet',num2str(setNum)];
+    folderName = [topFolder,'\ParameterSet',num2str(setNum)];
     
     if ~exist(folderName,'dir')
         mkdir(folderName);
@@ -75,7 +76,7 @@ for setNum = 1:size(paramSet,1)
 
         % Save the outputs
         fileName = ['ParameterSet',num2str(setNum),'\Rep',num2str(repNum)];
-        save(['Data5\',fileName,'.mat'],'agent','goalReachTime','environment','simParameters','agentParameters','obstacleParameters')    
+%         save([topFolder,'\',fileName,'.mat'],'agent','goalReachTime','environment','simParameters','agentParameters','obstacleParameters')    
         
         % Store the outputs in cells
 %         grt{run} = goalReachTime;
