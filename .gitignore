@@ -34,6 +34,10 @@ $RECYCLE.BIN/
 *.pdf
 *.fig
 *.ai
+*.eps
+
+# Movies
+*.mp4
 
 # =========================
 # Operating System Files
