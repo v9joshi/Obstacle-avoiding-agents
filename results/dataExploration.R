@@ -17,9 +17,11 @@ figTheme <- theme(panel.background=element_rect(fill="white"),
                   panel.grid.minor = element_line(colour = "grey", size = 0.1))
 
 
-data <- read.csv ("summaryData20201204.csv",fileEncoding="UTF-8-BOM")
-paramMetaData <- read.csv ("paramMetaData20201204.csv",fileEncoding="UTF-8-BOM")
-goalTimesData <- read.csv ("goalTimesData20201204.csv",fileEncoding="UTF-8-BOM")
+fileDate = "20210203.csv"
+
+data <- read.csv (paste("summaryData", fileDate, sep=""),fileEncoding="UTF-8-BOM")
+paramMetaData <- read.csv (paste("paramMetaData", fileDate, sep=""),fileEncoding="UTF-8-BOM")
+goalTimesData <- read.csv (paste("goalTimesData", fileDate, sep=""),fileEncoding="UTF-8-BOM")
 
 data <- mutate (data, 
                 RealSetNum = 
@@ -248,7 +250,7 @@ ggplot (persistenceData, aes (x = meanPersY-ObstacleRadius, y = NumSucceed,
   figTheme 
 
  write.table (persistenceData,
-              file = paste0 ("processedData20201204.csv"),
+              file = paste0 (paste("processedData", fileDate, sep="")),
               col.names=TRUE, row.names=FALSE,sep=",")
 
 
