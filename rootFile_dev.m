@@ -8,7 +8,7 @@
 % Clear and close everything
 % clc; close all; clear;
 
-function [agentTurnRadius, agentTurnCurvature] = rootFile_dev(alignWeight)
+function [agentTurnRadius, agentTurnCurvature] = rootFile_dev(alignWeight, fractionInformed, turnRate)
 
 % alignWeight = 50;
 
@@ -43,7 +43,7 @@ end
 numberOfNeighbors = 7;
 
 % How many agents know the destination?
-fractionInformed = 1;
+% fractionInformed = 1;
 informedAgents = round(fractionInformed*numberOfAgents);
 listOfInformedAgents = randsample(numberOfAgents, informedAgents);
 listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
@@ -59,7 +59,7 @@ obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
 obstacleVisibility = 1; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
 
 % Agent dynamics
-turnRate = 2; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
+% turnRate = 2; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
 agentSpeed = 1; % How fast do agents move?
 noiseDegree = 0; % How noisy is the agent motion from step to step
 

@@ -39,7 +39,7 @@ end
 numberOfNeighbors = 7;
 
 % How many agents know the destination?
-fractionInformed = 0.1;
+fractionInformed = 1;
 informedAgents = round(fractionInformed*numberOfAgents);
 listOfInformedAgents = randsample(numberOfAgents, informedAgents);
 listOfUninformedAgents = setdiff(1:numberOfAgents, listOfInformedAgents)';
@@ -52,18 +52,18 @@ attractDistance = 10; % Distance to other agents where attraction is maximal.
 % Calovi specific params
 alignYintercept = 0.6; % Y-intercept of alignment gaussian.
 obstacleDistance = 1; % Distance to obstacle where agents get repelled a lot
-obstacleVisibility = 1; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
+obstacleVisibility = obstacleDistance; % Obstacle visibility: Higher = Obs. avoidance 'starts' farther from obstacle.
 
 % Agent dynamics
-turnRate = 2; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
-agentSpeed = 1; % How fast do agents move?
+turnRate = 0.1; % units of radians per second. turning speed limit (applies only to modelCalovi = 0 or 1)
+agentSpeed = 10; % How fast do agents move?
 noiseDegree = 0; % How noisy is the agent motion from step to step
 
 % Agent social weights
 avoidWeight = 1;
 alignWeight = 0.1;
 attractWeight = 1;
-obstacleWeight = 1;
+obstacleWeight = 10;
 
 % Obstacle parameters
 obstacleType = 3;    % box = 1, wall = 2, arc = 3 ,arrowhead = 4
@@ -94,6 +94,8 @@ agentWeights.Avoidance = zeros(numberOfAgents, 1);
 agentWeights.Attraction = zeros(numberOfAgents, 1);
 agentWeights.Alignment = zeros(numberOfAgents, 1);
 agentWeights.Obstacle = zeros(numberOfAgents, 1);
+
+agentWeights.Persistence = zeros(numberOfAgents, 1);
 
 % How much do agents care about the destination
 agentWeights.Destination(listOfInformedAgents) = 1;
@@ -269,8 +271,8 @@ while timeList(end) < totalSimulationTime
     end    
     % If destination was reached, set desired agent speed and current
     % agents speed to 0.1
-    % actionInput.desiredSpeed(destinationReached == 0 ) = 0.1;
-    statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
+    %actionInput.desiredSpeed(destinationReached == 1 ) = 0.1;
+    %statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
 
     %if length(timeList)>800, keyboard, end% && (currAgent==1 || currAgent==2), keyboard, end
     % run the action step for all the agents and update the state list

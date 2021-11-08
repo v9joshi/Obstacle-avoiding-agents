@@ -232,13 +232,14 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
     actionInput.desiredSpeed = initialSpeed;
     actionInput.desiredOrientation = initialOrientation;
 
-    %% Run the simulation
+    %% Run the simulation till time runs out
     while timeList(end) < totalSimulationTime
 
         % What is the current state?
         statesNow = statesList(:,end);
 
-        % Run perception and decision  steps for each agent
+        % Run perception and decision  steps for each agent depending on
+        % model type
         for currAgent = 1:numberOfAgents
             if modelSelection == 0 || modelSelection == 1  % Couzin and Calovi variants
                 if (mod(length(timeList), numStepsPerUpdate) == 0)
@@ -258,13 +259,16 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
                     decisionInput = agentPerception3(currAgent, statesNow, params);
                     
                     % run the decision step and update action input
-%                     actionInput = agentDecisionCalovi(currAgent, params, decisionInput, actionInput);
                     actionInput = agentDecision(currAgent, params, decisionInput, actionInput);
+                    
+                    % Go back to the high speed motion
                     actionInput.desiredSpeed(currAgent) = agentSpeed;
                     
                     % now set the next time when you'll burst again:
-                    numStepsPerUpdate(currAgent) = max(numStepsPerUpdate(currAgent) + round((burstTimeMean + burstTimeStd*randn)/simStepTime),numStepsPerUpdate(currAgent)+1);  % the max is for low-end outliers of the gaussian so you don't get stuck never updating again
-                else  % keep coasting: reduce speed
+                    numStepsPerUpdate(currAgent) = max(numStepsPerUpdate(currAgent) + round((burstTimeMean + burstTimeStd*randn)/simStepTime),numStepsPerUpdate(currAgent)+1);  
+                    % the max is for low-end outliers of the gaussian so you don't get stuck never updating again
+                    
+                else % keep coasting: reduce speed
                     actionInput.desiredSpeed(currAgent) = actionInput.desiredSpeed(currAgent) * exp(-simStepTime/0.8);
                 end
             else
@@ -273,13 +277,13 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
             end
         end   
         
-       % If destination was reached, set desired agent speed and current
-       % agents speed to 0.1
-        statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
+        % If destination was reached, set desired agent speed and current
+        % agents speed to 0.1
+        % statesNow(2*numberOfAgents + find(destinationReached)) = 0.1;
        
         % run the action step for all the agents and update the state list
         if modelSelection == 0 || modelSelection == 1
-            statesNow = agentAction3(statesNow, params, actionInput);  
+            statesNow = agentAction3(statesNow, params, actionInput);
         elseif modelSelection == 2
             statesNow = agentAction3(statesNow, params, actionInput);
         else
