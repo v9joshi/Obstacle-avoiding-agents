@@ -1,5 +1,7 @@
 close all; clear all;
-processedData = readtable('processedData20201204.csv');
+% processedData = readtable('processedData20201204.csv');
+% processedData = readtable('processedData20210202.csv');
+processedData = readtable('processedData20200812.csv');
 
 for currRow = 1:height(processedData)
     
@@ -21,14 +23,18 @@ end
 % Tell me what files to check
 
 allIndices = 1:height(processedData);
-indexList = allIndices(processedData.AlignWeight == 1 & flockingEscape' == 0);
+indexList = allIndices(processedData.AvoidWeight < 3); %& isnan(flockingEscape'));
 
 pairedList = [setNum(indexList)', repNum(indexList)'];
-
+% pairedList = [4*ones(50,1), (1:50)'];%; 10, 1];
+    
 % Load a file from the list
-topDir = 'C:\Users\Varun\Documents\GitHub\Obstacle-avoiding-agents\Data5';
+% topDir = 'C:\Users\Varun\Documents\GitHub\Obstacle-avoiding-agents\Data5';
+topDir = 'C:\Users\Varun\Documents\GitHub\Obstacle-avoiding-agents\Data3';
+
+%%
 for currRow = 1:size(pairedList,1)
-    figure(processedData.ObstacleType(indexList(currRow)))
+    figure(1)%processedData.ObstacleType(indexList(currRow)))
     hold on
 
     fileName = [topDir, '\ParameterSet', num2str(pairedList(currRow,1)),'\Rep',num2str(pairedList(currRow,2)),'.mat'];

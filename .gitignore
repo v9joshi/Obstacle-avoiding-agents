@@ -29,7 +29,6 @@ $RECYCLE.BIN/
 # Zip files
 *.zip
 
-
 # Figures
 *.pdf
 *.fig
@@ -38,6 +37,13 @@ $RECYCLE.BIN/
 
 # Movies
 *.mp4
+
+# Documents
+.docx
+
+# R-history files
+.Rhistory
+*.RData
 
 # =========================
 # Operating System Files
