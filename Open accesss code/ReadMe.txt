@@ -8,7 +8,7 @@ the environment. The agents have individual behaviour designed to
     d) Avoid collisions with other agents.
 
 Simulation Parameters can be changed by affecting the following variables - 
-    1) Model selection     - 0 = discrete zones of behavior; 1 = continuous variant; 2 = burst-and-coast modification of 0
+    1) modelSelection      - 0 = discrete zones of behavior; 1 = continuous variant; 2 = burst-and-coast modification of 0
     2) totalSimulationTime - Total simulation time in seconds
     3) simStepTime         - Step time for the simulation in seconds
     4) numStepsPerUpdate   - Number of simulation steps each agent takes before changing its desired heading. 
@@ -38,8 +38,9 @@ Agent Parameters can be changed by affecting the following variables -
    13) attractWeight      - The weight applied to the agent attraction behavior when determining desired orientation.
    14) obstacleWeight     - The weight applied to the obstacle avoidance behavior when determining desired orientation.
 
+   Note: Noise only works in the discrete zone model (modelSelection = 0).
    15) noiseDegree        - The standard deviation of a wrapped gaussian noise (von mises distribution) that is added to the desired heading direction for each agent.
-   				    Non-zero values of noise degree are dependent on vmrand Matlab function developed by Dylan Muir.
+   			    Non-zero values of noise degree are dependent on vmrand Matlab function developed by Dylan Muir.
                             https://www.mathworks.com/matlabcentral/fileexchange/37241-vmrand-fmu-fkappa-varargin
 
 Obstacle parameters can be changed by affecting the following variables - 
