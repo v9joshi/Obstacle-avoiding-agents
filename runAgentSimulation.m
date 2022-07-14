@@ -19,7 +19,7 @@
 %          obstacle radius, obstacle visibility range
 %   10) Turn rate
 %   11 - 14) avoid weight, align weight, attract weight, obstacle weight
-%   15) agent persistence
+%   15) noise degree
 
 % obstacleParameters is a 4 parameter vector consisting of 
 %   1) Obstacle type - 1 Convex, 2 Wall, 3 Concave
@@ -69,14 +69,13 @@ function [goalReachTime, agent, environment] = runAgentSimulation(simParameters,
 
     % Agent dynamics
     turnRate = agentParameters(10); % units of radians per second. turning speed limit
-    noiseDegree = 0;%agentParameters(15);
-
+    noiseDegree = agentParameters(15); % units of radians. noise in the desired turning angle.
+    
     % Simulation parameters
     totalSimulationTime = simParameters(2); % How long does the simulation run?
     simStepTime = simParameters(3); % Step time for each loop of the simulation
     agentStepTime = simParameters(4);
     numStepsPerUpdate = floor(agentStepTime/simStepTime);
-
 
     %% Set up some weights for the agents
     agentWeights.Destination = zeros(numberOfAgents, 1);

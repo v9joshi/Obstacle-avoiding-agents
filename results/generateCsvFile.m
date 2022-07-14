@@ -1,7 +1,7 @@
 % Read the parameters sweep data, and generate tables with the processed
 % information.
 % Where is the data located?
-topDir = 'C:\Users\Varun\Documents\GitHub\Obstacle-avoiding-agents\Data7';
+topDir = 'C:\Users\Varun\Documents\GitHub\Obstacle-avoiding-agents\Data10';
 
 % Find all the folders
 folderList = dir([topDir,'/Parameter*']);
@@ -106,7 +106,12 @@ for paramSet = 1:length(folderList)
         currTable.AvoidWeight = agentParameters(11); 
         currTable.AlignWeight = agentParameters(12); 
         currTable.AttractWeight = agentParameters(13); 
-        currTable.ObstacleWeight = agentParameters(14); 
+        currTable.ObstacleWeight = agentParameters(14);
+
+        if length(agentParameters) >= 15
+            currTable.NoiseDegree = agentParameters(15);
+        end
+
         currTable.MeanGoalTime = nanmean(goalReachTime);
         currTable.MedianGoalTime = nanmedian(goalReachTime);
         currTable.NumSucceed = sum(~isnan(goalReachTime));
@@ -131,6 +136,11 @@ for paramSet = 1:length(folderList)
         currGoalReachTimes.AlignWeight = repelem(agentParameters(12), agentParameters(1))'; 
         currGoalReachTimes.AttractWeight = repelem(agentParameters(13), agentParameters(1))'; 
         currGoalReachTimes.ObstacleWeight = repelem(agentParameters(14), agentParameters(1))';
+
+        if length(agentParameters) >= 15
+            currGoalReachTimes.NoiseDegree = repelem(agentParameters(15), agentParameters(1))';
+        end
+
         currGoalReachTimes.Agent = (1:agentParameters(1))';
         currGoalReachTimes.GoalReachTimes = goalReachTime;
         currGoalReachTimes.minimumYs = minimumYs;
@@ -144,10 +154,10 @@ for paramSet = 1:length(folderList)
 end
 
 %% Write table to file
-filename = 'summaryData20210203.csv';
+filename = 'summaryData20220408.csv';
 writetable(dataTable,filename);
 
-filename2 = 'goalTimesData20210203.csv';
+filename2 = 'goalTimesData20220408.csv';
 writetable(goalReachTimeTable,filename2);
 
 %% Separately make an image of each simulation's trajectories

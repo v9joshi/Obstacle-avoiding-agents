@@ -18,8 +18,8 @@ figTheme <- theme(panel.background=element_rect(fill="white"),
                   #panel.grid.minor = element_line(colour = "grey", size = 0.1))
 
 
-#data <- read.csv ("processedData20200812.csv")
-data <- read.csv ("processedData20201118.csv")
+data <- read.csv ("processedCorrected20200812.csv")
+#data <- read.csv ("processedData20201118.csv")
 #data <- read.csv ("processedData20201204.csv")
 #data <- read.csv ("processedData20210202.csv")
 #data <- read.csv ("processedData20210203.csv")
@@ -134,7 +134,7 @@ p2 <- ggplot (summaryData3, aes (x = xValue, y = meanGoalTime)) +
   ylim(0, 300)+
   figTheme
 
-grid.arrange(p1, p2, nrow = 1)
+#grid.arrange(p1, p2, nrow = 1)
 
 
 p3 <- ggplot (summaryData3, aes (x = xValue, y = propFlockEscape)) +
@@ -157,7 +157,7 @@ p4 <- ggplot (summaryData3, aes (x = xValue, y = meanGoalTime)) +
               ylim(0, 300)+
               figTheme
 
-grid.arrange(p3, p4, nrow = 1)
+#grid.arrange(p3, p4, nrow = 1)
 
 #data$MeanGoalTime[is.na(data$MeanGoalTime)]<-500
 
@@ -182,7 +182,7 @@ p2 <- ggplot (summaryData3, aes (x = xValue, y = meanGoalTime)) +
   ylim(0, 300)+
   figTheme
 
-grid.arrange(p1, p2, nrow = 1)
+#grid.arrange(p1, p2, nrow = 1)
 
 #data$MeanGoalTime[is.na(data$MeanGoalTime)]<-500
 

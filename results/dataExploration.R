@@ -17,7 +17,7 @@ figTheme <- theme(panel.background=element_rect(fill="white"),
                   panel.grid.minor = element_line(colour = "grey", size = 0.1))
 
 
-fileDate = "20210203.csv"
+fileDate = "20220408.csv"
 
 data <- read.csv (paste("summaryData", fileDate, sep=""),fileEncoding="UTF-8-BOM")
 paramMetaData <- read.csv (paste("paramMetaData", fileDate, sep=""),fileEncoding="UTF-8-BOM")

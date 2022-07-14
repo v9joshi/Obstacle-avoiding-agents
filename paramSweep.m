@@ -35,30 +35,68 @@ clc; clear; close all;
 %   3) Obstacle arc - The angular range of a convex/concave obstacle
 %   4) Gap size - The size of the gap in the middle of the obstacle
 % Load the parameters
-paramTable = readtable('parameters20210202.csv');
+paramTable = readtable('parameters20220408.csv');
 
-paramSet = [paramTable.modelCalovi, paramTable.totalSimulationTime, paramTable.physicsStepTime, paramTable.agentStepTime,...
-            paramTable.numberOfAgents, paramTable.numberOfNeighbors, paramTable.fractionInformed, paramTable.avoidDistance,...
-            paramTable.alignDistance, paramTable.attractDistance, paramTable.alignYintercept, paramTable.obstacleDistance,...
-            paramTable.obstacleVisibility, paramTable.turnRate, paramTable.avoidWeight, paramTable.alignWeight,...
-            paramTable.attractWeight, paramTable.obstacleWeight, paramTable.obstacleType, paramTable.obstacleScale,...
-            paramTable.arcAngle, paramTable.gapSize];
+agentParameterNames = {'numberOfAgents','numberOfNeighbors',...
+                        'fractionInformed','avoidDistance',...
+                        'alignDistance','attractDistance',...
+                        'alignYintercept','obstacleDistance',...
+                        'obstacleVisibility','turnRate',...
+                        'avoidWeight','alignWeight','attractWeight',...
+                        'obstacleWeight','noiseDegree','Persistence'};
+
+simParameterNames = {'modelCalovi','totalSimulationTime',...
+                        'physicsStepTime','agentStepTime'};
+
+obstacleParameterNames = {'obstacleType','obstacleScale',...
+                          'arcAngle','gapSize'};
+
+% 
+% paramSet = [paramTable.modelCalovi, paramTable.totalSimulationTime, paramTable.physicsStepTime, paramTable.agentStepTime,...
+%             paramTable.numberOfAgents, paramTable.numberOfNeighbors, paramTable.fractionInformed, paramTable.avoidDistance,...
+%             paramTable.alignDistance, paramTable.attractDistance, paramTable.alignYintercept, paramTable.obstacleDistance,...
+%             paramTable.obstacleVisibility, paramTable.turnRate, paramTable.avoidWeight, paramTable.alignWeight,...
+%             paramTable.attractWeight, paramTable.obstacleWeight, paramTable.obstacleType, paramTable.obstacleScale,...
+%             paramTable.arcAngle, paramTable.gapSize];
 
 numReps = 50;
 
-topFolder = 'Data9';
+topFolder = 'Data10';
 % Create the data storage folder
 if ~exist(topFolder,'dir')
     mkdir(topFolder)
 end
 
 % Loop through the param set
-for setNum = 1:size(paramSet,1)
-    % Unpack the parameters
-    simParameters      = paramSet(setNum,1:4);
-    agentParameters    = paramSet(setNum,5:18);
-    obstacleParameters = paramSet(setNum,19:22);
-    
+for setNum = 1:height(paramTable)
+    % Set up parameter arrays
+    simParameters = zeros(length(simParameterNames),1);
+    agentParameters = zeros(length(agentParameterNames),1);
+    obstacleParameters = zeros(length(obstacleParameterNames),1);
+
+    % Unpack the parameters 
+    for fieldNum = 1:length(simParameterNames)
+        if ismember(simParameterNames{fieldNum},fields(paramTable))
+            simParameters(fieldNum) = paramTable.(simParameterNames{fieldNum})(setNum);
+        end
+    end
+
+    for fieldNum = 1:length(agentParameterNames)
+        if ismember(agentParameterNames{fieldNum},fields(paramTable))
+            agentParameters(fieldNum) = paramTable.(agentParameterNames{fieldNum})(setNum);
+        end
+    end
+
+    for fieldNum = 1:length(obstacleParameterNames)
+        if ismember(obstacleParameterNames{fieldNum},fields(paramTable))
+            obstacleParameters(fieldNum) = paramTable.(obstacleParameterNames{fieldNum})(setNum);
+        end
+    end
+
+%     simParameters      = paramSet(setNum,1:4);
+%     agentParameters    = paramSet(setNum,5:18);
+%     obstacleParameters = paramSet(setNum,19:22);
+
     folderName = [topFolder,'\ParameterSet',num2str(setNum)];
     
     if ~exist(folderName,'dir')
@@ -76,7 +114,7 @@ for setNum = 1:size(paramSet,1)
 
         % Save the outputs
         fileName = ['ParameterSet',num2str(setNum),'\Rep',num2str(repNum)];
-%         save([topFolder,'\',fileName,'.mat'],'agent','goalReachTime','environment','simParameters','agentParameters','obstacleParameters')    
+        save([topFolder,'\',fileName,'.mat'],'agent','goalReachTime','environment','simParameters','agentParameters','obstacleParameters')    
         
         % Store the outputs in cells
 %         grt{run} = goalReachTime;

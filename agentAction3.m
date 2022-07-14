@@ -31,13 +31,17 @@ function stateListNew = agentAction3(stateList, params, actionInput)
             agentOrientation(currAgent) = mod(agentOrientation(currAgent) + pi, 2*pi) - pi;
         end
 
+        % Find the change in orientation
         desiredChangeInOrientation(currAgent) = desiredOrientation(currAgent) - agentOrientation(currAgent);
 
+        % Wrap the new orientation angle to [-pi,pi]
         if (abs(desiredChangeInOrientation(currAgent)) > pi)
             desiredChangeInOrientation(currAgent) = mod(desiredChangeInOrientation(currAgent) + pi, 2*pi) - pi;
         end
     end
 
+
+    % Limit the rotation using the turn rate
     dAgentOrientation = min(abs(desiredChangeInOrientation)/stepTime, turnRate).*sign(desiredChangeInOrientation);
 
     % Store the derivatives
