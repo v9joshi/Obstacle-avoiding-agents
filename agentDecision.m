@@ -1,93 +1,94 @@
-% Agent decision step
+% agentDecision:
+% Agent decision step for the discrete/zonal model.
+% Reads the state of an agent and its neighbours and determines the desired
+% heading direction. Repulsion, attraction & alignment are restricted to 
+% distinct zones.
 function actionInput = agentDecision(currAgent, params, decisionInput, actionInput)
+    %% Unpack required distance parameters
+    avoidDistance    = params.avoidDistance;
+    attractDistance  = params.attractDistance;
+    alignDistance    = params.alignDistance;
+    obstacleDistance = params.obstacleDistance;
+    
+    % Unpack social behavior weights
+    agentWeights = params.agentWeights;
 
-% unpack required params
-avoidDistance = params.avoidDistance;
-attractDistance = params.attractDistance;
-alignDistance = params.alignDistance;
-obstacleDistance = params.obstacleDistance;
+    % Unpack the nois parameter
+    noiseDegree = params.noiseDegree;
+    
+    %% Unpack the decision input variable that comes from the perception step
+    % Where are other agents located?
+    agentDistanceList        = decisionInput.agentDistanceList;
+    relativeAgentOrientation = decisionInput.relativeAgentOrientation;
+    absoluteAgentOrientation = decisionInput.absoluteAgentOrientation;
+   
+    % Where are the obstalces and the destination located?
+    distanceFromObsLocations = decisionInput.distanceFromObsLocations;
+    relativeObsUnitVector = decisionInput.relativeObsUnitVector;
+    relativeDesUnitVector  = decisionInput.relativeDesUnitVector;
+    
+    % Get repelled by close by Agents
+    changeInOrientationAvoid = relativeAgentOrientation;
+    changeInOrientationAvoid(agentDistanceList > avoidDistance, :) = [];
+    
+    % Get aligned with Agents that are close but not very close
+    changeInOrientationAlign = absoluteAgentOrientation;
+    changeInOrientationAlign(avoidDistance > agentDistanceList | agentDistanceList > alignDistance, :) = [];
+    
+    % Get attracted to Agents that are close but not very close
+    changeInOrientationAttract = relativeAgentOrientation;
+    changeInOrientationAttract(alignDistance > agentDistanceList | agentDistanceList > attractDistance, :) = [];
+        
+    % Get repelled by obstacles    
+    relativeObsUnitVector(obstacleDistance < distanceFromObsLocations, :) = [];
+        
+    %% Add the unit vectors together and then determine the desired heading
+    if params.numberOfAgents == 1 % Special case handling
+        if isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the water source
+            summedUnitVectors = agentWeights.Destination(currAgent)*sum(relativeDesUnitVector, 1)...
+                                + agentWeights.Persistence(currAgent)...
+                                * sum([cos(absoluteAgentOrientation),sin(absoluteAgentOrientation)], 1);
+        
+        else % if you're near an obstacle forget all about the destination
+            summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationAvoid, 1)...
+                                - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
+        end    
+    else % Typical scenario with more than one agent
+        if isempty(changeInOrientationAvoid) && isempty(relativeObsUnitVector) % if you're not avoiding an agent or obstacle, consider all behavior
+            summedUnitVectors = agentWeights.Attraction(currAgent)*sum(changeInOrientationAttract, 1)...
+                                + agentWeights.Alignment(currAgent)*sum(changeInOrientationAlign, 1)...
+                                + agentWeights.Destination(currAgent)*sum(relativeDesUnitVector, 1);
 
-agentWeights = params.agentWeights;
-
-noiseDegree = params.noiseDegree;
-
-% % unpack the states of the agent
-% agentX = stateList(1:numberOfAgents);
-% agentY = stateList(numberOfAgents + 1: 2*numberOfAgents);
-% agentSpeed = stateList(2*numberOfAgents + 1: 3*numberOfAgents);
-% agentOrientation = stateList(3*numberOfAgents + 1:end);
-
-% unpack the decision input variable
-agentDistanceList = decisionInput.agentDistanceList;
-relativeAgentOrientation = decisionInput.relativeAgentOrientation;
-absoluteAgentOrientation = decisionInput.absoluteAgentOrientation;
-distanceFromObsLocations = decisionInput.distanceFromObsLocations;
-relativeObsUnitVector = decisionInput.relativeObsUnitVector;
-relativeWSUnitVector = decisionInput.relativeWSUnitVector;
-
-% Get repelled by close by Agents
-changeInOrientationAvoid = relativeAgentOrientation;
-changeInOrientationAvoid(agentDistanceList > avoidDistance, :) = [];
-
-% Get attracted to Agents that are close but not very close
-changeInOrientationAttract = relativeAgentOrientation;
-changeInOrientationAttract(alignDistance > agentDistanceList | agentDistanceList > attractDistance, :) = [];
-
-% Get aligned with Agents that are close but not very close
-changeInOrientationAlign = absoluteAgentOrientation;
-changeInOrientationAlign(avoidDistance > agentDistanceList | agentDistanceList > alignDistance, :) = [];
-
-% Get repelled by obstacles    
-relativeObsUnitVector(obstacleDistance < distanceFromObsLocations, :) = [];
-
-% changeInOrientationRepel = [changeInOrientationRepel; relativeObsUnitVector];
-
-% Add the unit vectors together and then determine the orientation
-if params.numberOfAgents == 1
-    if isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the water source
-        summedUnitVectors = agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1)...
-                            + agentWeights.Persistence(currAgent)...
-                            * sum([cos(absoluteAgentOrientation),sin(absoluteAgentOrientation)], 1);
-    else % if you're near an obstacle forget all about the destination
-        summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationAvoid, 1)...
-                            - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
-    end    
-else
-    if isempty(changeInOrientationAvoid) && isempty(relativeObsUnitVector) % if you're not avoiding an agent or obstacle, do everything
-        summedUnitVectors = agentWeights.Attraction(currAgent)*sum(changeInOrientationAttract, 1)...
-                            + agentWeights.Alignment(currAgent)*sum(changeInOrientationAlign, 1)...
-                            + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1);
-    elseif isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the water source
-        summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationAvoid, 1)...
-                            + agentWeights.Destination(currAgent)*sum(relativeWSUnitVector, 1);
-    else % if you're near an obstacle forget all about the destination
-        summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationAvoid, 1)...
-                            - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
-                            % + agentGains(currAgent)*sum(relativeWSUnitVector, 1);
+        elseif isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the water source
+            summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationAvoid, 1)...
+                                + agentWeights.Destination(currAgent)*sum(relativeDesUnitVector, 1);
+        
+        else % if you're near an obstacle forget all about the destination
+            summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationAvoid, 1)...
+                                - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
+        end
     end
-end
+    
+    % Normalize the result
+    if sqrt(sum(summedUnitVectors.^2)) == 0 % Exception handling when sum is 0
+        normalizedSum = [0, 0];
+    else
+        normalizedSum = summedUnitVectors/sqrt(sum(summedUnitVectors.^2));
+    end
 
-if sqrt(sum(summedUnitVectors.^2)) == 0
-    normalizedSum = [0, 0];
-else
-    normalizedSum = summedUnitVectors/sqrt(sum(summedUnitVectors.^2));
-end
+    %% Find the heading angle 
+    % Convert direction vector to angle
+    desiredOrientation = atan2(normalizedSum(2), normalizedSum(1));
 
-% Convert vectors to angle
-desiredOrientation = atan2(normalizedSum(2), normalizedSum(1));
-
-% Add noise to the desired orientation
-% note: vmrand(mu, kappa) is the von mises distribution which 
-% approximates the wrapped normal distribution.
-% mu is the mean, kappa ~ 1/(sigma^2) where sigma is the standard
-% deviation of the normal distribution
-if noiseDegree > 0
-    desiredOrientationNoisy = desiredOrientation + vmrand(0,1/noiseDegree^2);   
-    actionInput.desiredOrientation(currAgent) = desiredOrientationNoisy;
-else
-    actionInput.desiredOrientation(currAgent) = desiredOrientation;
-end
-% desiredOrientationNoisy = desiredOrientation + (rand()-0.5)*2*pi*noiseDegree/360;
-
-
+    %% Add noise to the desired orientation
+    % note: vmrand(mu, kappa) is the von mises distribution which 
+    % approximates the wrapped normal distribution.
+    % mu is the mean, kappa ~ 1/(sigma^2) where sigma is the standard
+    % deviation of the normal distribution
+    if noiseDegree > 0 % If there is non-zero noise, add the noise
+        desiredOrientationNoisy = desiredOrientation + vmrand(0,1/noiseDegree^2);   
+        actionInput.desiredOrientation(currAgent) = desiredOrientationNoisy;
+    else % If there is no noise just store the desired orientation
+        actionInput.desiredOrientation(currAgent) = desiredOrientation;
+    end
 end

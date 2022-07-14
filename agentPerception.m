@@ -1,88 +1,91 @@
-% Agent perception step
+% agentPerception:
+% Agent Perception step for all models.
+% Determine relative orientations and distances to all other agents,
+% all obstacle points and the destination.
 function decisionInput = agentPerception(currAgent, stateList, params)
+    %% unpack some parameters
+    numberOfAgents = params.numberOfAgents;
 
-% unpack some parameters
-numberOfAgents = params.numberOfAgents;
-waterSourceLocations = params.waterSourceLocations;
-obstacleLocations = params.obstacleLocations;
-numberOfNeighbors = params.numberOfNeighbors;
+    destinationLocations = params.destinationLocations;
+    obstacleLocations    = params.obstacleLocations;
+    numberOfNeighbors    = params.numberOfNeighbors;
 
-% unpack the states of the agents
-agentX = stateList(1:numberOfAgents);
-agentY = stateList(numberOfAgents + 1: 2*numberOfAgents);
-agentSpeed = stateList(2*numberOfAgents + 1: 3*numberOfAgents);
-agentOrientation = stateList(3*numberOfAgents + 1:end);
+    %% unpack the states of the agents
+    agentX = stateList(1:numberOfAgents);
+    agentY = stateList(numberOfAgents + 1: 2*numberOfAgents);
+    agentOrientation = stateList(3*numberOfAgents + 1:end);
 
-% Agent positions in 2D
-agentPositions = [agentX, agentY];
-  
-% Where is the current agent located?
-currAgentPosition = agentPositions(currAgent, :);
+    % Agent positions in 2D
+    agentPositions = [agentX, agentY];
 
-% where are the rest of the agents?
-otherAgentPositions = agentPositions;
-otherAgentPositions(currAgent, :) = [];
+    % Where is the current agent located?
+    currAgentPosition = agentPositions(currAgent, :);
 
-otherAgentOrientations = agentOrientation;
-otherAgentOrientations(currAgent) =  [];
+    % where are the rest of the agents relative to the current agent
+    relativePositions = agentPositions - repmat(currAgentPosition, size(agentPositions, 1), 1);
+    relativePositions(currAgent, :) = [];
 
-% Determine the visibility of other agents and drop agents that can't be
-% seen
-agentLength = params.agentLength;
-agentVisible = ones(size(otherAgentPositions, 1), 1);
-for otherAgentNum = 1:size(otherAgentPositions, 1)
-    agentVisible(otherAgentNum) = isAgentVisible(currAgentPosition, otherAgentPositions(otherAgentNum,:), obstacleLocations, agentLength);
-end
+    otherAgentOrientations = agentOrientation;
+    otherAgentOrientations(currAgent) =  [];
 
-otherAgentPositions(~agentVisible, :) = []; % drop agent if obstructed
-otherAgentOrientations(~agentVisible, :) = []; % drop agent if obstructed
+    %% Where is the destination located relative to the current Agent?
+    relativeDesLocations = destinationLocations - repmat(currAgentPosition, size(destinationLocations, 1), 1);
+    distanceFromDesLocations = sqrt(sum(relativeDesLocations.^2, 2));
+    decisionInput.distanceFromDesLocations = distanceFromDesLocations;
 
-% What is the distance between our Agent and the rest?
-relativePositions = otherAgentPositions - repmat(currAgentPosition, size(otherAgentPositions, 1), 1);
-agentDistanceList = sqrt(sum(relativePositions.^2, 2));
-decisionInput.agentDistanceList = agentDistanceList;
+    %% Where are the Obstacles located relative to the current Agent?
+    relativeObsLocations = obstacleLocations - repmat(currAgentPosition, size(obstacleLocations, 1), 1);
+    distanceFromObsLocations = sqrt(sum(relativeObsLocations.^2, 2));
+    decisionInput.distanceFromObsLocations = distanceFromObsLocations;
 
-% Order agents based on distance, closest first, furthest last
-[~, sortedAgentList] = sort(agentDistanceList); % determine the sorting order
-% Drop agents that aren't within the nearest set of neighbors defined by
-% numberOfNeighbors parameter
-neighborIndices = sortedAgentList(1:min(length(sortedAgentList), numberOfNeighbors));
+    % What is the distance between our Agent and the rest?
+    agentDistanceList = sqrt(sum(relativePositions.^2, 2));
+    
+    %% Determine the visibility of other agents and drop agents that can't be seen
+    obstacleSpacing = params.obstacleSpacing;
+    agentVisible = ones(size(relativePositions, 1), 1);
+    
+    for otherAgentNum = 1:size(relativePositions, 1)
+        agentVisible(otherAgentNum) = isAgentVisible(relativePositions(otherAgentNum,:), relativeObsLocations, agentDistanceList(otherAgentNum), distanceFromObsLocations,obstacleSpacing);
+    end
 
-% Overwrite all the perception variables to contain only neighbors
-agentDistanceList = agentDistanceList(neighborIndices);
-otherAgentPositions = otherAgentPositions(neighborIndices,:);
-otherAgentOrientations = otherAgentOrientations(neighborIndices,:);
-decisionInput.agentDistanceList = agentDistanceList; 
-relativePositions = otherAgentPositions - repmat(currAgentPosition, size(otherAgentPositions, 1), 1);
+    % Use vectors to obstacle and goal to determine goal visibility
+    for goalNumber = 1:size(destinationLocations, 1)
+        decisionInput.goalVisibility(goalNumber) = isAgentVisible(relativeDesLocations(goalNumber, :), relativeObsLocations, distanceFromDesLocations(goalNumber), distanceFromObsLocations, obstacleSpacing);
+    end
 
-% Use distance and locations to determine unit vectors to other agents
-decisionInput.relativeAgentOrientation = [relativePositions(:,1)./agentDistanceList, relativePositions(:,2)./agentDistanceList];
+    % Order agents based on distance, closest first, furthest last
+    [~, sortedAgentList] = sort(agentDistanceList); % determine the sorting order
+    
+    % Drop hidden agents
+    sortedAgentList = sortedAgentList(agentVisible(sortedAgentList) == 1);
+    
+    % Drop agents that aren't within the nearest set of neighbors defined by
+    % numberOfNeighbors parameter
+    neighborIndices = sortedAgentList(1:min(length(sortedAgentList), numberOfNeighbors));
 
-% Use other agent orientations to determine their direction unit vectors
-decisionInput.absoluteAgentOrientation = [cos(otherAgentOrientations), sin(otherAgentOrientations)];
+    % Overwrite all the perception variables to contain only neighbors
+    agentDistanceList = agentDistanceList(neighborIndices);
+    relativePositions = relativePositions(neighborIndices,:);
+    otherAgentOrientations = otherAgentOrientations(neighborIndices,:);
 
-% Where are the Water Sources located relative to the current Agent?
-relativeWSLocations = waterSourceLocations - repmat(currAgentPosition, size(waterSourceLocations, 1), 1);
-distanceFromWSLocations = sqrt(sum(relativeWSLocations.^2, 2));
-decisionInput.distanceFromWSLocations = distanceFromWSLocations;
+    %% Construct the output structure
+    % Agent distances
+    decisionInput.agentDistanceList = agentDistanceList; 
 
-% Use distance and location to determine the unit vector to the water
-% source
-decisionInput.relativeWSUnitVector = [relativeWSLocations(:,1)./distanceFromWSLocations, relativeWSLocations(:,2)./distanceFromWSLocations];
+    % Use distance and location to determine the unit vector to the destination
+    decisionInput.relativeDesUnitVector = [relativeDesLocations(:,1)./distanceFromDesLocations, relativeDesLocations(:,2)./distanceFromDesLocations];
 
-% Where are the Obstacles located relative to the current Agent?
-relativeObsLocations = obstacleLocations - repmat(currAgentPosition, size(obstacleLocations, 1), 1);
-distanceFromObsLocations = sqrt(sum(relativeObsLocations.^2, 2));
-decisionInput.distanceFromObsLocations = distanceFromObsLocations;
+    % Use distance and locations to determine unit vectors to the obstacles
+    decisionInput.relativeObsUnitVector = [relativeObsLocations(:,1)./distanceFromObsLocations, relativeObsLocations(:,2)./distanceFromObsLocations];
 
-% Use distance and locations to determine unit vectors to the obstacles
-decisionInput.relativeObsUnitVector = [relativeObsLocations(:,1)./distanceFromObsLocations, relativeObsLocations(:,2)./distanceFromObsLocations];
+    % Use distance and locations to determine unit vectors to other agents
+    decisionInput.relativeAgentOrientation = [relativePositions(:,1)./agentDistanceList, relativePositions(:,2)./agentDistanceList];
 
-% Use vectors to obstacle and goal to determine goal visibility
-% decisionInput.goalVisibility = isGoalVisible(currAgentPosition, decisionInput, params, obstacleLocations);
-goalSize = params.goalSize;
-for goalNumber = 1:size(waterSourceLocations, 1)
-    decisionInput.goalVisibility(goalNumber) = isAgentVisible(currAgentPosition, waterSourceLocations(goalNumber, :), obstacleLocations, goalSize);
-end
-
+    % Use other agent orientations to determine their direction unit vectors
+    if numberOfAgents == 1
+        decisionInput.absoluteAgentOrientation = agentOrientation(currAgent);
+    else
+        decisionInput.absoluteAgentOrientation = [cos(otherAgentOrientations), sin(otherAgentOrientations)];
+    end
 end
