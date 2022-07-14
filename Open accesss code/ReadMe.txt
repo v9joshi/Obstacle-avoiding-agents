@@ -1,7 +1,7 @@
 To run a simulation please run simulateAgents.m in Matlab.
 
 This program simulates multiple agents interacting with each other and
-the environment. The agents have inidivual behaviour designed to 
+the environment. The agents have individual behaviour designed to 
     a) Move towards a goal.
     b) Avoid obstacles in the way.
     c) Interact with other agents so as to move in a group
