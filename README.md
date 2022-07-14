@@ -14,4 +14,4 @@ This project started as a part of the
 
 
 #### Project members: 
-[Helen McCreery](https://www.helenmccreery.com/), [Justin Werfel](http://people.seas.harvard.edu/~jkwerfel/), [Stefan Popp](https://eeb.arizona.edu/person/stefan-popp)) and [Varun Joshi](https://www.varun-joshi.com).
+[Helen McCreery](https://www.helenmccreery.com/), [Justin Werfel](http://people.seas.harvard.edu/~jkwerfel/), [Stefan Popp](https://eeb.arizona.edu/person/stefan-popp) and [Varun Joshi](https://www.varun-joshi.com).
