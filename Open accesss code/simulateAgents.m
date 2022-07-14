@@ -61,6 +61,10 @@ alignWeight    = 10;
 attractWeight  = 1;
 obstacleWeight = 1;
 
+% Agent noise parameter
+noiseDegree = 0; % Standard deviation (in radians) for wrapped gaussian (von-mises distribution noise).
+                 % Depends on the vmrand in matlab file exchange function developed by Dylan Muir
+
 %% Store all the weights for the agents
 agentWeights.Destination = zeros(numberOfAgents, 1);
 agentWeights.Avoidance   = zeros(numberOfAgents, 1);
@@ -173,6 +177,8 @@ params.numberOfAgents  = numberOfAgents;
 params.avoidDistance   = avoidDistance;
 params.alignDistance   = alignDistance;
 params.attractDistance = attractDistance;
+
+params.noiseDegree     = noiseDegree;
 
 params.numberOfNeighbors = numberOfNeighbors;
 
