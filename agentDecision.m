@@ -67,7 +67,6 @@ else
     end
 end
 
-
 if sqrt(sum(summedUnitVectors.^2)) == 0
     normalizedSum = [0, 0];
 else
@@ -77,9 +76,18 @@ end
 % Convert vectors to angle
 desiredOrientation = atan2(normalizedSum(2), normalizedSum(1));
 
-% Add some noise (in degree) to your desired orientation
-desiredOrientationNoisy = desiredOrientation + (rand()-0.5)*2*pi*noiseDegree/360;
+% Add noise to the desired orientation
+% note: vmrand(mu, kappa) is the von mises distribution which 
+% approximates the wrapped normal distribution.
+% mu is the mean, kappa ~ 1/(sigma^2) where sigma is the standard
+% deviation of the normal distribution
+if noiseDegree > 0
+    desiredOrientationNoisy = desiredOrientation + vmrand(0,1/noiseDegree^2);   
+    actionInput.desiredOrientation(currAgent) = desiredOrientationNoisy;
+else
+    actionInput.desiredOrientation(currAgent) = desiredOrientation;
+end
+% desiredOrientationNoisy = desiredOrientation + (rand()-0.5)*2*pi*noiseDegree/360;
 
-actionInput.desiredOrientation(currAgent) = desiredOrientationNoisy;
 
 end

@@ -5,6 +5,7 @@ function decisionInput = agentPerception3(currAgent, stateList, params)
     waterSourceLocations = params.waterSourceLocations;
     obstacleLocations = params.obstacleLocations;
     numberOfNeighbors = params.numberOfNeighbors;
+    noiseDegree = params.noiseDegree;    
 
     % unpack the states of the agents
     agentX = stateList(1:numberOfAgents);
