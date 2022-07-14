@@ -12,6 +12,9 @@ function actionInput = agentDecision(currAgent, params, decisionInput, actionInp
     
     % Unpack social behavior weights
     agentWeights = params.agentWeights;
+
+    % Unpack the nois parameter
+    noiseDegree = params.noiseDegree;
     
     %% Unpack the decision input variable that comes from the perception step
     % Where are other agents located?
@@ -72,11 +75,20 @@ function actionInput = agentDecision(currAgent, params, decisionInput, actionInp
     else
         normalizedSum = summedUnitVectors/sqrt(sum(summedUnitVectors.^2));
     end
-    
+
     %% Find the heading angle 
     % Convert direction vector to angle
     desiredOrientation = atan2(normalizedSum(2), normalizedSum(1));
 
-    % Store the result and return it
-    actionInput.desiredOrientation(currAgent) = desiredOrientation;
+    %% Add noise to the desired orientation
+    % note: vmrand(mu, kappa) is the von mises distribution which 
+    % approximates the wrapped normal distribution.
+    % mu is the mean, kappa ~ 1/(sigma^2) where sigma is the standard
+    % deviation of the normal distribution
+    if noiseDegree > 0 % If there is non-zero noise, add the noise
+        desiredOrientationNoisy = desiredOrientation + vmrand(0,1/noiseDegree^2);   
+        actionInput.desiredOrientation(currAgent) = desiredOrientationNoisy;
+    else % If there is no noise just store the desired orientation
+        actionInput.desiredOrientation(currAgent) = desiredOrientation;
+    end
 end
