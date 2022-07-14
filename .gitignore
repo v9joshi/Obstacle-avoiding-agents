@@ -50,5 +50,5 @@ $RECYCLE.BIN/
 # =========================
 
 # Folders with results and figures
-/Figures and tables/*
-/results/*
+Figures and tables/*
+results/*
