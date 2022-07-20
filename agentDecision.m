@@ -13,7 +13,7 @@ function actionInput = agentDecision(currAgent, params, decisionInput, actionInp
     % Unpack social behavior weights
     agentWeights = params.agentWeights;
 
-    % Unpack the nois parameter
+    % Unpack the noise parameter
     noiseDegree = params.noiseDegree;
     
     %% Unpack the decision input variable that comes from the perception step
@@ -22,7 +22,7 @@ function actionInput = agentDecision(currAgent, params, decisionInput, actionInp
     relativeAgentOrientation = decisionInput.relativeAgentOrientation;
     absoluteAgentOrientation = decisionInput.absoluteAgentOrientation;
    
-    % Where are the obstalces and the destination located?
+    % Where are the obstacles and the destination located?
     distanceFromObsLocations = decisionInput.distanceFromObsLocations;
     relativeObsUnitVector = decisionInput.relativeObsUnitVector;
     relativeDesUnitVector  = decisionInput.relativeDesUnitVector;
@@ -44,7 +44,7 @@ function actionInput = agentDecision(currAgent, params, decisionInput, actionInp
         
     %% Add the unit vectors together and then determine the desired heading
     if params.numberOfAgents == 1 % Special case handling
-        if isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the water source
+        if isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the destination
             summedUnitVectors = agentWeights.Destination(currAgent)*sum(relativeDesUnitVector, 1)...
                                 + agentWeights.Persistence(currAgent)...
                                 * sum([cos(absoluteAgentOrientation),sin(absoluteAgentOrientation)], 1);
@@ -59,7 +59,7 @@ function actionInput = agentDecision(currAgent, params, decisionInput, actionInp
                                 + agentWeights.Alignment(currAgent)*sum(changeInOrientationAlign, 1)...
                                 + agentWeights.Destination(currAgent)*sum(relativeDesUnitVector, 1);
 
-        elseif isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the water source
+        elseif isempty(relativeObsUnitVector) % if you're not near an obstacle still try to go towards the destination
             summedUnitVectors = - agentWeights.Avoidance(currAgent)*sum(changeInOrientationAvoid, 1)...
                                 + agentWeights.Destination(currAgent)*sum(relativeDesUnitVector, 1);
         
