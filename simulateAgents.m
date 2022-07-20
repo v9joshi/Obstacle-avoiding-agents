@@ -10,7 +10,7 @@ clc; close all; clear;
 
 %% Define sim parameters
 % Model being used
-modelSelection = 2; % 0 = discrete zones of behavior; 1 = continuous variant; 2 = burst-and-coast modification of 0
+modelSelection = 0; % 0 = discrete zones of behavior; 1 = continuous variant; 2 = burst-and-coast modification of 0
 
 % Simulation parameters
 totalSimulationTime = 100; % How long does the simulation run?
@@ -53,7 +53,7 @@ obstacleVisibility = obstacleDistance; % Obstacle visibility: Higher = Obs. avoi
 
 % Agent movement speeds
 turnRate   = 2;  % units of radians per second. turning speed limit (applies only to model = 0 or 1)
-agentSpeed = 10; % How fast do agents move?
+agentSpeed = 1;  % How fast do agents move?
 
 % Agent social weights
 avoidWeight    = 1;
@@ -84,12 +84,12 @@ agentWeights.Alignment(:)  = alignWeight;
 agentWeights.Obstacle(:) = obstacleWeight;
 
 %% Obstacle parameters
-obstacleType  = 3;    % box = 1, wall = 2, arc = 3, caret = 4
-obstacleScale = 15;  % length scale of obstacle
+obstacleType  = 3;                   % box = 1, wall = 2, arc = 3, caret = 4
+obstacleScale = 15;                  % length scale of obstacle
 arcLength     = pi*obstacleScale/2;  % length of the obstacle arc in length units (regardless of angle & radius)
-arcRadius     = obstacleScale/2; % radius of the arc (position stays the same)
+arcRadius     = obstacleScale/2;     % radius of the arc (position stays the same)
 arcAngle      = arcLength/arcRadius; % how many degrees should arc obstacles cover?
-gapSize       = 0;         % size of gap in the middle of the wall
+gapSize       = 0;                   % size of gap in the middle of the wall
 
 obstacleCenter = [0,20]; % The center for the obstacle
 
@@ -206,7 +206,7 @@ destination     = goalLocations(1,:);
 destinationList = goalLocations;
 
 numberOfBouts      = 0;
-goalReachTime      = NaN(numberOfAgents,1); % time when goal was reached
+goalReachTime      = NaN(numberOfAgents,1);   % time when goal was reached
 destinationReached = zeros(numberOfAgents,1); % flag for reaching the goal
 
 % Define these variables
@@ -360,7 +360,7 @@ for currTimeIndex = 1:showStep:length(timeList)
     hold on
 
     % Plot the obstacle
-    plot(obstacleLocations(:,1), obstacleLocations(:,2), 'kx','MarkerFaceColor','k') 
+    plot(obstacleLocations(:,1), obstacleLocations(:,2), 'k-','MarkerFaceColor','k') 
    
     xlabel('Agents x position')
     ylabel('Agents y position')
