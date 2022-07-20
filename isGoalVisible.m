@@ -23,5 +23,5 @@ relativeWSUnitVector = decisionInput.relativeWSUnitVector;
     agentObstruction((abs(relativeObstacleAngle - relativeWSAngle) < angularRange) & (obstacleDistance < goalDistance)) = 1;
     
     % Set visibility
-    goalVisibility = ~sum(agentObstruction); % if even one obstruction is active then visibility is 0    
+    goalVisibility = ~any(agentObstruction); % if even one obstruction is active then visibility is 0    
 end
