@@ -8,6 +8,9 @@
 % Clear and close everything
 clc; close all; clear;
 
+% Add path to vmrand and arrow
+addpath("external")
+
 %% Define sim parameters
 % Model being used
 modelSelection = 0; % 0 = discrete zones of behavior; 1 = continuous variant; 2 = burst-and-coast modification of 0
