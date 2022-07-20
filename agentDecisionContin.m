@@ -24,7 +24,7 @@ function actionInput = agentDecisionContin(currAgent, params, decisionInput, act
     relativeAgentOrientation = decisionInput.relativeAgentOrientation;
     absoluteAgentOrientation = decisionInput.absoluteAgentOrientation;
     
-    % Where are the obstalces and the destination located?
+    % Where are the obstacles and the destination located?
     distanceFromObsLocations = decisionInput.distanceFromObsLocations;
     relativeObsUnitVector = decisionInput.relativeObsUnitVector;
 
@@ -32,7 +32,7 @@ function actionInput = agentDecisionContin(currAgent, params, decisionInput, act
     
     %% Determine the desired heading
     if params.numberOfAgents == 1 % Exception handling when there is just one agent
-        % Get repelled by obstacles. Exponentially more the closer you are
+        % Get repelled by obstacles, exponentially more the closer you are
         forcesOfObsRep = (1./distanceFromObsLocations)./obstacleSize;
         forcesOfObsRep = forcesOfObsRep*obstacleDistance;
     
@@ -46,7 +46,7 @@ function actionInput = agentDecisionContin(currAgent, params, decisionInput, act
                             - agentWeights.Obstacle(currAgent)*sum(relativeObsUnitVector, 1);
     
     else % Typical case with multiple agents
-        % Get repulsed by close by Agents
+        % Get repulsed by nearby Agents
         forcesOfRep = -(agentDistanceList-avoidDistance).^agentWeights.Avoidance(currAgent);
         changeInOrientationAvoid = relativeAgentOrientation.*[forcesOfRep, forcesOfRep];
         changeInOrientationAvoid(agentDistanceList > avoidDistance, :) = [];
@@ -64,7 +64,7 @@ function actionInput = agentDecisionContin(currAgent, params, decisionInput, act
         forcesOfAlign(forcesOfAlign<0) = 0;
         changeInOrientationAlign = absoluteAgentOrientation.*[forcesOfAlign, forcesOfAlign];
     
-        % Get repelled by obstacles. Exponentially more the closer you are
+        % Get repelled by obstacles, exponentially more the closer you are
         forcesOfObsRep = (1./distanceFromObsLocations)./obstacleSize;
         forcesOfObsRep = forcesOfObsRep*obstacleDistance;
     
