@@ -8,7 +8,6 @@ Desktop.ini
 
 # Data files
 *.csv
-*.txt
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
