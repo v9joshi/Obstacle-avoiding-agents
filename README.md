@@ -1,6 +1,8 @@
 # Obstacle-avoiding-agents
 ### Simulations of agents navigating an environment while trying to avoid obstacles.
 
+A paper detailing the results of and methods for this project has been published at [https://royalsocietypublishing.org/doi/10.1098/rsif.2022.0356](https://royalsocietypublishing.org/doi/10.1098/rsif.2022.0356)
+
 This project started as a part of the 
 [2018 MBI workshop on collective behaviour and emergent phenomena in biology.](https://mbi.osu.edu/events/collective-behavior-and-emergent-phenomena-biology)
 
